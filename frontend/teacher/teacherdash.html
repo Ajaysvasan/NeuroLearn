@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Intelligent Assessment System</title>
+    <link rel="stylesheet" href="../teacher/teacherdash.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h2><i class="fas fa-graduation-cap"></i>NeuroLearn</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-section="overview">
+                    <i class="fas fa-dashboard"></i>
+                    <span>Overview</span>
+                </li>
+                <li class="nav-item" data-section="students">
+                    <i class="fas fa-users"></i>
+                    <span>Students</span>
+                </li>
+                <li class="nav-item" data-section="syllabus">
+                    <i class="fas fa-book"></i>
+                    <span>Syllabus</span>
+                </li>
+                <li class="nav-item" data-section="questions">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Questions</span>
+                </li>
+                <li class="nav-item" data-section="assessments">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Assessments</span>
+                </li>
+                <li class="nav-item" data-section="analytics">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </li>
+            </ul>
+            <div class="logout">
+                <button class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 id="page-title">Dashboard Overview</h1>
+                </div>
+                <div class="header-right">
+                    <div class="profile">
+                        <img src="https://via.placeholder.com/40" alt="Profile" class="profile-img">
+                        <span class="profile-name">Dr. Sarah Johnson</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Overview Section -->
+            <section id="overview" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-info">
+                            <h3>Total Students</h3>
+                            <p class="stat-number">156</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-book"></i>
+                        <div class="stat-info">
+                            <h3>Subjects</h3>
+                            <p class="stat-number">8</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-clipboard-list"></i>
+                        <div class="stat-info">
+                            <h3>Active Assessments</h3>
+                            <p class="stat-number">12</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-chart-line"></i>
+                        <div class="stat-info">
+                            <h3>Average Score</h3>
+                            <p class="stat-number">78%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <i class="fas fa-user-plus"></i>
+                            <span>New student John Doe registered</span>
+                            <span class="time">2 hours ago</span>
+                        </div>
+                        <div class="activity-item">
+                            <i class="fas fa-file-upload"></i>
+                            <span>Mathematics syllabus updated</span>
+                            <span class="time">5 hours ago</span>
+                        </div>
+                        <div class="activity-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Physics assessment completed by 25 students</span>
+                            <span class="time">1 day ago</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Students Section -->
+            <section id="students" class="content-section">
+                <div class="section-header">
+                    <h2>Student Management</h2>
+                    <div class="filters">
+                        <select id="subjectFilter" class="filter-select">
+                            <option value="">All Subjects</option>
+                            <option value="mathematics">Mathematics</option>
+                            <option value="physics">Physics</option>
+                            <option value="chemistry">Chemistry</option>
+                            <option value="biology">Biology</option>
+                        </select>
+                        <select id="performanceFilter" class="filter-select">
+                            <option value="">All Performance</option>
+                            <option value="excellent">Excellent (90%+)</option>
+                            <option value="good">Good (75-89%)</option>
+                            <option value="average">Average (60-74%)</option>
+                            <option value="poor">Needs Improvement (<60%)</option>
+                        </select>
+                        <input type="text" id="searchStudent" placeholder="Search students..." class="search-input">
+                    </div>
+                </div>
+
+                <div class="students-table-container">
+                    <table class="students-table" id="studentsTable">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Email</th>
+                                <th>Subjects</th>
+                                <th>Assessments Taken</th>
+                                <th>Average Score</th>
+                                <th>Last Activity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <!-- Student data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Syllabus Section -->
+            <section id="syllabus" class="content-section">
+                <div class="section-header">
+                    <h2>Syllabus Management</h2>
+                    <button class="btn-primary" id="uploadSyllabusBtn">
+                        <i class="fas fa-upload"></i> Upload Syllabus
+                    </button>
+                </div>
+
+                <div class="syllabus-grid">
+                    <div class="syllabus-card">
+                        <div class="subject-icon mathematics">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <h3>Mathematics</h3>
+                        <p>Algebra, Calculus, Geometry</p>
+                        <div class="syllabus-actions">
+                            <button class="btn-secondary">View</button>
+                            <button class="btn-primary">Update</button>
+                        </div>
+                    </div>
+                    <div class="syllabus-card">
+                        <div class="subject-icon physics">
+                            <i class="fas fa-atom"></i>
+                        </div>
+                        <h3>Physics</h3>
+                        <p>Mechanics, Thermodynamics, Optics</p>
+                        <div class="syllabus-actions">
+                            <button class="btn-secondary">View</button>
+                            <button class="btn-primary">Update</button>
+                        </div>
+                    </div>
+                    <div class="syllabus-card">
+                        <div class="subject-icon chemistry">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <h3>Chemistry</h3>
+                        <p>Organic, Inorganic, Physical</p>
+                        <div class="syllabus-actions">
+                            <button class="btn-secondary">View</button>
+                            <button class="btn-primary">Update</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Questions Section -->
+            <section id="questions" class="content-section">
+                <div class="section-header">
+                    <h2>Question Management</h2>
+                    <div class="question-actions">
+                        <button class="btn-primary" id="addQuestionBtn">
+                            <i class="fas fa-plus"></i> Add Question
+                        </button>
+                        <button class="btn-secondary" id="generateQuestionsBtn">
+                            <i class="fas fa-robot"></i> AI Generate
+                        </button>
+                    </div>
+                </div>
+
+                <div class="questions-container">
+                    <div class="question-filters">
+                        <select id="questionSubject" class="filter-select">
+                            <option value="">All Subjects</option>
+                            <option value="mathematics">Mathematics</option>
+                            <option value="physics">Physics</option>
+                            <option value="chemistry">Chemistry</option>
+                        </select>
+                        <select id="questionDifficulty" class="filter-select">
+                            <option value="">All Difficulty</option>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+
+                    <div class="questions-list" id="questionsList">
+                        <!-- Questions will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Assessments Section -->
+            <section id="assessments" class="content-section">
+                <div class="section-header">
+                    <h2>Assessment Management</h2>
+                    <button class="btn-primary" id="createAssessmentBtn">
+                        <i class="fas fa-plus"></i> Create Assessment
+                    </button>
+                </div>
+
+                <div class="assessments-grid">
+                    <div class="assessment-card">
+                        <div class="assessment-header">
+                            <h3>Mathematics Quiz - Chapter 5</h3>
+                            <span class="status active">Active</span>
+                        </div>
+                        <div class="assessment-info">
+                            <p><i class="fas fa-users"></i> 45 participants</p>
+                            <p><i class="fas fa-clock"></i> 30 minutes</p>
+                            <p><i class="fas fa-calendar"></i> Due: July 30, 2025</p>
+                        </div>
+                        <div class="assessment-actions">
+                            <button class="btn-secondary">View Results</button>
+                            <button class="btn-primary">Edit</button>
+                        </div>
+                    </div>
+                    <!-- More assessment cards... -->
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="content-section">
+                <div class="section-header">
+                    <h2>Performance Analytics</h2>
+                </div>
+                <div class="analytics-container">
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                    <div class="insights">
+                        <h3>Key Insights</h3>
+                        <ul>
+                            <li>Mathematics shows highest engagement</li>
+                            <li>Chemistry needs more practice sessions</li>
+                            <li>Average improvement: 15% over last month</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Upload Syllabus</h2>
+            <form id="syllabusForm">
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <select id="subject" required>
+                        <option value="">Select Subject</option>
+                        <option value="mathematics">Mathematics</option>
+                        <option value="physics">Physics</option>
+                        <option value="chemistry">Chemistry</option>
+                        <option value="biology">Biology</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="syllabusFile">Syllabus File</label>
+                    <input type="file" id="syllabusFile" accept=".pdf,.doc,.docx" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" rows="4" placeholder="Brief description of the syllabus..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelUpload">Cancel</button>
+                    <button type="submit" class="btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../teacher/teacherdash.js"></script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Intelligent Assessment System</title>
+    <link rel="stylesheet" href="../student/studentdash.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h2><i class="fas fa-graduation-cap"></i> NeuroLearn</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-dashboard"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-section="quizzes">
+                    <i class="fas fa-question"></i>
+                    <span>Available Quizzes</span>
+                </li>
+                <li class="nav-item" data-section="performance">
+                    <i class="fas fa-chart-line"></i>
+                    <span>My Performance</span>
+                </li>
+                <li class="nav-item" data-section="feedback">
+                    <i class="fas fa-comments"></i>
+                    <span>AI Feedback</span>
+                </li>
+                <li class="nav-item" data-section="achievements">
+                    <i class="fas fa-trophy"></i>
+                    <span>Achievements</span>
+                </li>
+                <li class="nav-item" data-section="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </li>
+            </ul>
+            <div class="logout">
+                <button class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 id="page-title">My Dashboard</h1>
+                    <p class="welcome-text">Welcome back, <span id="student-name">Alex Johnson</span>!</p>
+                </div>
+                <div class="header-right">
+                    <div class="notifications">
+                        <button class="notification-btn">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-count">3</span>
+                        </button>
+                    </div>
+                    <div class="profile">
+                        <img src="https://via.placeholder.com/40" alt="Profile" class="profile-img">
+                        <span class="profile-name">Alex Johnson</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <!-- Quick Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-clipboard-check"></i>
+                        <div class="stat-info">
+                            <h3>Quizzes Completed</h3>
+                            <p class="stat-number">24</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-percentage"></i>
+                        <div class="stat-info">
+                            <h3>Average Score</h3>
+                            <p class="stat-number">85%</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-fire"></i>
+                        <div class="stat-info">
+                            <h3>Current Streak</h3>
+                            <p class="stat-number">7 days</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-medal"></i>
+                        <div class="stat-info">
+                            <h3>Rank</h3>
+                            <p class="stat-number">#12</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Learning Level -->
+                <div class="learning-level-card">
+                    <h3>AI Assessment Level</h3>
+                    <div class="level-info">
+                        <div class="level-indicator">
+                            <div class="level-bar">
+                                <div class="level-progress" style="width: 75%"></div>
+                            </div>
+                            <span class="level-text">Intermediate - Level 3</span>
+                        </div>
+                        <p class="level-description">
+                            Great progress! The AI has identified your strengths in Mathematics and Physics. 
+                            Keep challenging yourself with medium-level questions.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Recommended Quizzes -->
+                <div class="recommended-section">
+                    <h3>Recommended for You</h3>
+                    <div class="quiz-recommendations">
+                        <div class="quiz-card recommended">
+                            <div class="quiz-header">
+                                <div class="subject-icon mathematics">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <div class="quiz-info">
+                                    <h4>Calculus Practice</h4>
+                                    <p>Derivatives and Integration</p>
+                                </div>
+                            </div>
+                            <div class="quiz-meta">
+                                <span class="difficulty medium">Medium</span>
+                                <span class="questions">15 Questions</span>
+                                <span class="time">20 mins</span>
+                            </div>
+                            <button class="start-quiz-btn" data-quiz-id="calc-001">Start Quiz</button>
+                        </div>
+
+                        <div class="quiz-card recommended">
+                            <div class="quiz-header">
+                                <div class="subject-icon physics">
+                                    <i class="fas fa-atom"></i>
+                                </div>
+                                <div class="quiz-info">
+                                    <h4>Mechanics Fundamentals</h4>
+                                    <p>Force and Motion</p>
+                                </div>
+                            </div>
+                            <div class="quiz-meta">
+                                <span class="difficulty medium">Medium</span>
+                                <span class="questions">12 Questions</span>
+                                <span class="time">15 mins</span>
+                            </div>
+                            <button class="start-quiz-btn" data-quiz-id="phys-001">Start Quiz</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-timeline">
+                        <div class="activity-item">
+                            <div class="activity-icon success">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h4>Completed Chemistry Quiz</h4>
+                                <p>Scored 92% - Excellent work!</p>
+                                <span class="activity-time">2 hours ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon info">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h4>AI Level Adjustment</h4>
+                                <p>Difficulty increased to Medium level</p>
+                                <span class="activity-time">1 day ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon achievement">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h4>Achievement Unlocked</h4>
+                                <p>Mathematics Master - 10 perfect scores</p>
+                                <span class="activity-time">2 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Available Quizzes Section -->
+            <section id="quizzes" class="content-section">
+                <div class="section-header">
+                    <h2>Available Quizzes</h2>
+                    <div class="quiz-filters">
+                        <select id="subjectFilterQuiz" class="filter-select">
+                            <option value="">All Subjects</option>
+                            <option value="mathematics">Mathematics</option>
+                            <option value="physics">Physics</option>
+                            <option value="chemistry">Chemistry</option>
+                            <option value="biology">Biology</option>
+                        </select>
+                        <select id="difficultyFilterQuiz" class="filter-select">
+                            <option value="">All Levels</option>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="quizzes-grid" id="quizzesGrid">
+                    <!-- Quiz cards will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Performance Section -->
+            <section id="performance" class="content-section">
+                <div class="section-header">
+                    <h2>My Performance</h2>
+                </div>
+
+                <div class="performance-overview">
+                    <div class="performance-card">
+                        <h3>Overall Progress</h3>
+                        <div class="progress-chart">
+                            <canvas id="progressChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="performance-card">
+                        <h3>Subject Breakdown</h3>
+                        <div class="subject-scores">
+                            <div class="subject-score">
+                                <div class="subject-info">
+                                    <span class="subject-name">Mathematics</span>
+                                    <span class="score">92%</span>
+                                </div>
+                                <div class="score-bar">
+                                    <div class="score-progress" style="width: 92%"></div>
+                                </div>
+                            </div>
+                            <div class="subject-score">
+                                <div class="subject-info">
+                                    <span class="subject-name">Physics</span>
+                                    <span class="score">87%</span>
+                                </div>
+                                <div class="score-bar">
+                                    <div class="score-progress" style="width: 87%"></div>
+                                </div>
+                            </div>
+                            <div class="subject-score">
+                                <div class="subject-info">
+                                    <span class="subject-name">Chemistry</span>
+                                    <span class="score">79%</span>
+                                </div>
+                                <div class="score-bar">
+                                    <div class="score-progress" style="width: 79%"></div>
+                                </div>
+                            </div>
+                            <div class="subject-score">
+                                <div class="subject-info">
+                                    <span class="subject-name">Biology</span>
+                                    <span class="score">83%</span>
+                                </div>
+                                <div class="score-bar">
+                                    <div class="score-progress" style="width: 83%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detailed-performance">
+                    <h3>Detailed Performance History</h3>
+                    <div class="performance-table-container">
+                        <table class="performance-table">
+                            <thead>
+                                <tr>
+                                    <th>Quiz Name</th>
+                                    <th>Subject</th>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Time Taken</th>
+                                    <th>Difficulty</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="performanceTableBody">
+                                <!-- Performance data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Feedback Section -->
+            <section id="feedback" class="content-section">
+                <div class="section-header">
+                    <h2>AI Feedback & Recommendations</h2>
+                </div>
+
+                <div class="feedback-container">
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <i class="fas fa-brain"></i>
+                            <h3>Learning Analysis</h3>
+                        </div>
+                        <div class="feedback-content">
+                            <p><strong>Strengths:</strong> You excel in algebraic problem-solving and show consistent improvement in calculus concepts.</p>
+                            <p><strong>Areas for Improvement:</strong> Focus more on geometry theorems and practice trigonometric identities.</p>
+                            <p><strong>Recommendation:</strong> Try 3-4 geometry questions daily to strengthen your weak areas.</p>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <i class="fas fa-chart-line"></i>
+                            <h3>Progress Insights</h3>
+                        </div>
+                        <div class="feedback-content">
+                            <p>Your performance has improved by <strong>15%</strong> over the last month!</p>
+                            <p>You're performing <strong>12%</strong> above average in your current level.</p>
+                            <p>Ready for level advancement? Complete 2 more medium-level quizzes with 85%+ scores.</p>
+                        </div>
+                    </div>
+
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <i class="fas fa-lightbulb"></i>
+                            <h3>Study Suggestions</h3>
+                        </div>
+                        <div class="feedback-content">
+                            <ul>
+                                <li>Review integration by parts - appeared challenging in recent quizzes</li>
+                                <li>Practice more word problems in physics mechanics</li>
+                                <li>Strengthen organic chemistry nomenclature</li>
+                                <li>Schedule regular review sessions for better retention</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Achievements Section -->
+            <section id="achievements" class="content-section">
+                <div class="section-header">
+                    <h2>My Achievements</h2>
+                </div>
+
+                <div class="achievements-grid">
+                    <div class="achievement-card earned">
+                        <div class="achievement-icon">
+                            <i class="fas fa-medal"></i>
+                        </div>
+                        <h3>First Quiz Master</h3>
+                        <p>Complete your first quiz with 90%+ score</p>
+                        <span class="earned-date">Earned 2 weeks ago</span>
+                    </div>
+
+                    <div class="achievement-card earned">
+                        <div class="achievement-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <h3>Week Warrior</h3>
+                        <p>Complete quizzes for 7 consecutive days</p>
+                        <span class="earned-date">Earned 3 days ago</span>
+                    </div>
+
+                    <div class="achievement-card earned">
+                        <div class="achievement-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <h3>Math Whiz</h3>
+                        <p>Score 95%+ on 5 mathematics quizzes</p>
+                        <span class="earned-date">Earned 1 week ago</span>
+                    </div>
+
+                    <div class="achievement-card locked">
+                        <div class="achievement-icon">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <h3>Quiz Champion</h3>
+                        <p>Reach top 10 in class rankings</p>
+                        <span class="progress">8/10 completed</span>
+                    </div>
+
+                    <div class="achievement-card locked">
+                        <div class="achievement-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3>Speed Demon</h3>
+                        <p>Complete a quiz in under 5 minutes with 90%+ score</p>
+                        <span class="progress">Not yet achieved</span>
+                    </div>
+
+                    <div class="achievement-card locked">
+                        <div class="achievement-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3>AI Challenger</h3>
+                        <p>Successfully complete 10 hard-level quizzes</p>
+                        <span class="progress">3/10 completed</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile" class="content-section">
+                <div class="section-header">
+                    <h2>My Profile</h2>
+                </div>
+
+                <div class="profile-container">
+                    <div class="profile-card">
+                        <div class="profile-avatar">
+                            <img src="https://via.placeholder.com/120" alt="Profile Picture">
+                            <button class="change-avatar-btn">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
+                        <div class="profile-info">
+                            <h3>Alex Johnson</h3>
+                            <p>Grade 12 - Science Stream</p>
+                            <p>alex.johnson@email.com</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-stats">
+                        <h3>Learning Statistics</h3>
+                        <div class="stats-list">
+                            <div class="stat-item">
+                                <span class="stat-label">Member Since:</span>
+                                <span class="stat-value">January 2025</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Total Study Time:</span>
+                                <span class="stat-value">24 hours 30 minutes</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Favorite Subject:</span>
+                                <span class="stat-value">Mathematics</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Learning Style:</span>
+                                <span class="stat-value">Visual Learner</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-settings">
+                        <h3>Settings</h3>
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <label>Email Notifications</label>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>Quiz Reminders</label>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>Dark Mode</label>
+                                <label class="switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quizModal" class="modal">
+        <div class="modal-content quiz-modal">
+            <div class="quiz-header-modal">
+                <h2 id="quizTitle">Mathematics Quiz</h2>
+                <div class="quiz-info-modal">
+                    <span id="questionCounter">Question 1 of 10</span>
+                    <span id="timer">05:00</span>
+                </div>
+            </div>
+            <div class="quiz-body">
+                <div class="question-container">
+                    <h3 id="currentQuestion">What is the derivative of x²?</h3>
+                    <div class="options-container" id="optionsContainer">
+                        <!-- Options will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            <div class="quiz-footer">
+                <button class="btn-secondary" id="prevQuestion">Previous</button>
+                <button class="btn-primary" id="nextQuestion">Next</button>
+                <button class="btn-primary" id="submitQuiz" style="display: none;">Submit Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../student/studentdash.js"></script>
+</body>
+</html>

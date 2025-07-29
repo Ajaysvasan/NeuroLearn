@@ -1,0 +1,4 @@
+venv
+.env
+*.pdf
+generated_questions_medium.txt

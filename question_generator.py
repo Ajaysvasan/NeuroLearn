@@ -52,7 +52,7 @@ def configure_gemini_with_retry():
     # List of Gemini models to try in order of preference
     models_to_try = [
         {
-            'name': 'gemini-1.5-pro',
+            'name': 'gemini-2.5-flash-lite',
             'description': 'Gemini 1.5 Pro - Best for complex reasoning',
             'rate_limit_delay': 1.0
         },
@@ -104,7 +104,7 @@ def configure_gemini_with_retry():
         "top_p": 0.8,
         "top_k": 40,
         "max_output_tokens": 2048,
-        "response_mime_type": "text/plain",
+        # "response_mime_type": "text/plain",
     }
     
     for model_info in models_to_try:

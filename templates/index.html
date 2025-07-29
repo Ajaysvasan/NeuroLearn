@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GATE Practice Test Generator</title>
+    <link rel="stylesheet" href="static/css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>🎓 GATE Practice Test Generator</h1>
+        <p>Transform your PDFs into interactive practice tests</p>
+    </header>
+    
+    <main>
+        <!-- Input Section -->
+        <section id="input-section">
+            <h2>📚 Create Your Practice Test</h2>
+            <form id="pdf-upload-form">
+                <div>
+                    <label for="pdf-input">
+                        📄 Upload PDF Files
+                        <small style="display: block; color: #6c757d; font-weight: normal; margin-top: 5px;">
+                            Select one or more PDF files containing GATE study material
+                        </small>
+                    </label>
+                    <input type="file" id="pdf-input" multiple accept="application/pdf" required>
+                </div>
+                
+                <div>
+                    <label for="difficulty">
+                        🎯 Difficulty Level
+                    </label>
+                    <select id="difficulty">
+                        <option value="easy">Easy - Basic concepts and simple problems</option>
+                        <option value="medium" selected>Medium - Standard GATE level questions</option>
+                        <option value="advanced">Advanced - Complex multi-step problems</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="num-questions">
+                        🔢 Number of Questions
+                    </label>
+                    <input type="number" id="num-questions" min="1" max="50" value="10" required>
+                    <small style="display: block; color: #6c757d; margin-top: 5px;">
+                        Choose between 1-50 questions (recommended: 10-20 for focused practice)
+                    </small>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-top: 30px;">
+                    <button type="submit" id="generate-btn" class="btn-primary">
+                        🚀 Generate Questions
+                    </button>
+                </div>
+            </form>
+            
+            <div id="error-message" class="error" style="display:none;"></div>
+            <div id="loading" class="loading" style="display:none;">
+                <div>🔄 Generating your personalized test questions...</div>
+                <div style="font-size: 0.9rem; color: #6c757d; margin-top: 10px;">
+                    This may take a few moments while we analyze your PDFs
+                </div>
+            </div>
+        </section>
+        
+        <!-- Questions Section -->
+        <section id="questions-section" style="display:none;">
+            <div class="progress" id="progress"></div>
+            
+            <div id="question-box"></div>
+            
+            <form id="answer-form">
+                <div id="options-box"></div>
+                <div style="display: flex; gap: 15px; margin-top: 25px;">
+                    <button type="submit" id="submit-btn" class="btn-primary">
+                        ✅ Submit Answer
+                    </button>
+                    <button type="button" id="skip-btn" class="btn-secondary">
+                        ⏭️ Skip Question
+                    </button>
+                </div>
+            </form>
+            
+            <div id="timer"></div>
+        </section>
+        
+        <!-- Results Section -->
+        <section id="results-section" style="display:none;">
+            <div id="results-box"></div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="restartTest()" class="btn-success">
+                    🔄 Take Another Test
+                </button>
+                <button onclick="window.print()" class="btn-primary" style="margin-left: 15px;">
+                    🖨️ Print Results
+                </button>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 30px; color: #6c757d; background: rgba(255,255,255,0.8); margin-top: 40px;">
+        <p>💡 <strong>Pro Tip:</strong> Regular practice with varied difficulty levels helps improve GATE performance</p>
+        <p style="font-size: 0.9rem; margin-top: 10px;">
+            Built for GATE aspirants | Upload your study materials and get instant practice tests
+        </p>
+    </footer>
+
+    <script src="static/js/main.js"></script>
+</body>
+</html>

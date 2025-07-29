@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense } from 'react'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { ToastContainer } from 'react-toastify'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -7,263 +7,287 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { HelmetProvider } from 'react-helmet-async'
 import { ErrorBoundary } from 'react-error-boundary'
 
-// Store and Context Providers
-import { store } from '@store/store'
-import { AuthProvider } from '@context/AuthContext'
-import { ThemeProvider } from '@context/ThemeContext'
-import { AppProvider } from '@context/AppContext'
-
-// Router
-import AppRouter from '@router/AppRouter'
-
-// Components
-import LoadingSpinner from '@components/common/LoadingSpinner'
-import ErrorFallback from '@components/common/ErrorFallback'
-import PWAInstallPrompt from '@components/common/PWAInstallPrompt'
-import NetworkStatus from '@components/common/NetworkStatus'
-
-// Styles
-import '@styles/globals.css'
+// Import toast CSS
 import 'react-toastify/dist/ReactToastify.css'
 
-// Utils
-import { validateEnvVars } from '@utils/helpers'
-import { FEATURE_FLAGS } from '@utils/constants'
+// Store
+import { configureStore } from '@reduxjs/toolkit'
 
-// Service Worker Registration
-import { registerSW } from 'virtual:pwa-register'
+// Lazy load components
+const Home = React.lazy(() => import('./pages/Home'))
+const Login = React.lazy(() => import('./pages/auth/Login'))
+const Register = React.lazy(() => import('./pages/auth/Register'))
+const StudentDashboard = React.lazy(() => import('./pages/student/studentdashboard'))
+const TeacherDashboard = React.lazy(() => import('./pages/teacher/teacherDashboard'))
 
-// React Query Client Configuration
+// Basic error fallback
+const ErrorFallback = ({ error, resetErrorBoundary }) => (
+  <div style={{ 
+    padding: '2rem', 
+    textAlign: 'center',
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column'
+  }}>
+    <div style={{
+      maxWidth: '500px',
+      padding: '2rem',
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+      border: '1px solid #e0e0e0'
+    }}>
+      <h2 style={{ color: '#d32f2f', marginBottom: '1rem' }}>
+        🚨 Something went wrong
+      </h2>
+      <p style={{ color: '#666', margin: '1rem 0', lineHeight: '1.5' }}>
+        {error.message || 'An unexpected error occurred in NeuroLearn'}
+      </p>
+      <button 
+        onClick={resetErrorBoundary}
+        style={{
+          backgroundColor: '#1976d2',
+          color: 'white',
+          border: 'none',
+          padding: '0.75rem 1.5rem',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontSize: '0.875rem',
+          fontWeight: '500'
+        }}
+      >
+        🔄 Try again
+      </button>
+    </div>
+  </div>
+)
+
+// Enhanced loading component
+const LoadingSpinner = ({ text = "Loading NeuroLearn..." }) => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+    color: 'white',
+    textAlign: 'center'
+  }}>
+    <div style={{
+      marginBottom: '2rem',
+      fontSize: '3rem'
+    }}>
+      🧠
+    </div>
+    <h1 style={{ 
+      fontSize: '2rem', 
+      marginBottom: '1rem',
+      fontWeight: '700'
+    }}>
+      NeuroLearn
+    </h1>
+    <div style={{
+      width: '40px',
+      height: '40px',
+      border: '3px solid rgba(255, 255, 255, 0.3)',
+      borderTop: '3px solid white',
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite',
+      marginBottom: '1rem'
+    }}></div>
+    <p style={{ 
+      color: 'rgba(255, 255, 255, 0.9)',
+      fontSize: '1.1rem'
+    }}>
+      {text}
+    </p>
+    <p style={{ 
+      color: 'rgba(255, 255, 255, 0.7)',
+      fontSize: '0.9rem',
+      marginTop: '0.5rem'
+    }}>
+      Chennai's Intelligent Assessment Platform
+    </p>
+    <style>{`
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `}</style>
+  </div>
+)
+
+// Simple Redux store
+const store = configureStore({
+  reducer: {
+    app: (state = { 
+      initialized: true,
+      user: null,
+      theme: 'light'
+    }, action) => {
+      switch (action.type) {
+        case 'SET_USER':
+          return { ...state, user: action.payload }
+        case 'SET_THEME':
+          return { ...state, theme: action.payload }
+        default:
+          return state
+      }
+    }
+  }
+})
+
+// React Query Client with Chennai-optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       cacheTime: 10 * 60 * 1000, // 10 minutes
       retry: (failureCount, error) => {
-        // Don't retry on 4xx errors except 429 (rate limit)
-        if (error?.response?.status >= 400 && error?.response?.status < 500 && error?.response?.status !== 429) {
+        if (error?.response?.status >= 400 && error?.response?.status < 500) {
           return false
         }
-        return failureCount < 3
+        return failureCount < 2
       },
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
     },
-    mutations: {
-      retry: 1,
-      onError: (error) => {
-        console.error('Mutation error:', error)
-      },
-    },
   },
 })
 
-// Service Worker Update Handler
-const updateSW = registerSW({
-  onNeedRefresh() {
-    if (confirm('New content available, reload?')) {
-      updateSW(true)
-    }
-  },
-  onOfflineReady() {
-    console.log('App ready to work offline')
-  },
-  onRegisterError(error) {
-    console.error('SW registration error:', error)
-  },
-})
-
-// Environment Variables Validation
-const requiredEnvVars = [
-  'VITE_API_BASE_URL',
-  'VITE_APP_NAME',
-  'VITE_APP_VERSION',
-]
-
-// Global Error Handler
-const handleGlobalError = (error, errorInfo) => {
-  console.error('Global error caught:', error, errorInfo)
-  
-  // Send to error reporting service in production
-  if (import.meta.env.PROD) {
-    // analytics.track('error', {
-    //   error: error.message,
-    //   stack: error.stack,
-    //   errorInfo,
-    //   url: window.location.href,
-    //   userAgent: navigator.userAgent,
-    //   timestamp: new Date().toISOString(),
-    // })
-  }
-}
-
-// Keyboard Shortcuts Handler
-const useKeyboardShortcuts = () => {
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      // Global keyboard shortcuts
-      if (event.ctrlKey || event.metaKey) {
-        switch (event.key) {
-          case 'k':
-            // Open search (Ctrl/Cmd + K)
-            event.preventDefault()
-            // Dispatch search modal open event
-            window.dispatchEvent(new CustomEvent('openSearch'))
-            break
-          case '/':
-            // Open help (Ctrl/Cmd + /)
-            event.preventDefault()
-            window.dispatchEvent(new CustomEvent('openHelp'))
-            break
-          case '.':
-            // Open settings (Ctrl/Cmd + .)
-            event.preventDefault()
-            window.dispatchEvent(new CustomEvent('openSettings'))
-            break
-        }
-      }
-
-      // Escape key to close modals
-      if (event.key === 'Escape') {
-        window.dispatchEvent(new CustomEvent('closeModal'))
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
-}
-
-// Performance Monitoring
-const usePerformanceMonitoring = () => {
-  useEffect(() => {
-    // Web Vitals monitoring
-    const observer = new PerformanceObserver((list) => {
-      list.getEntries().forEach((entry) => {
-        if (entry.entryType === 'largest-contentful-paint') {
-          console.log('LCP:', entry.startTime)
-        }
-        if (entry.entryType === 'first-input') {
-          console.log('FID:', entry.processingStart - entry.startTime)
-        }
-        if (entry.entryType === 'layout-shift') {
-          if (!entry.hadRecentInput) {
-            console.log('CLS:', entry.value)
-          }
-        }
-      })
-    })
-
-    try {
-      observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] })
-    } catch (e) {
-      // Browser doesn't support these metrics
-    }
-
-    return () => observer.disconnect()
-  }, [])
-}
-
-// Network Status Monitoring
-const useNetworkMonitoring = () => {
-  useEffect(() => {
-    const handleOnline = () => {
-      console.log('App is online')
-      // Retry failed requests
-      queryClient.getQueryCache().getAll().forEach(query => {
-        if (query.state.status === 'error') {
-          query.fetch()
-        }
-      })
-    }
-
-    const handleOffline = () => {
-      console.log('App is offline')
-    }
-
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
-}
+// Router Component
+const AppRouter = () => (
+  <Routes>
+    {/* Home Route */}
+    <Route 
+      path="/" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Home..." />}>
+          <Home />
+        </Suspense>
+      } 
+    />
+    
+    {/* Authentication Routes */}
+    <Route 
+      path="/auth/login" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Login..." />}>
+          <Login />
+        </Suspense>
+      } 
+    />
+    
+    <Route 
+      path="/auth/register" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Register..." />}>
+          <Register />
+        </Suspense>
+      } 
+    />
+    
+    {/* Dashboard Routes */}
+    <Route 
+      path="/pages/student/studentdashboard" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Student Dashboard..." />}>
+          <StudentDashboard />
+        </Suspense>
+      } 
+    />
+    
+    <Route 
+      path="/pages/teacher/teacherDashboard" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Teacher Dashboard..." />}>
+          <TeacherDashboard />
+        </Suspense>
+      } 
+    />
+    
+    {/* Redirect any unknown routes to home */}
+    <Route path="*" element={<Navigate to="/" replace />} />
+  </Routes>
+)
 
 // Main App Component
 const App = () => {
-  // Custom hooks
-  useKeyboardShortcuts()
-  usePerformanceMonitoring()
-  useNetworkMonitoring()
-
-  // Validate environment variables on app start
   useEffect(() => {
-    try {
-      validateEnvVars(requiredEnvVars)
-    } catch (error) {
-      console.error('Environment validation failed:', error)
+    if (import.meta.env.DEV) {
+      console.log('🎓 NeuroLearn - Chennai Educational Platform')
+      console.log('📍 Location: Chennai, Tamil Nadu, India')
+      console.log('🚀 Environment:', import.meta.env.MODE)
+      console.log('✅ App successfully initialized!')
     }
+
+    const savedTheme = localStorage.getItem('neurolearn-theme')
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    const initialTheme = savedTheme || systemTheme
+    
+    document.documentElement.setAttribute('data-theme', initialTheme)
+    store.dispatch({ type: 'SET_THEME', payload: initialTheme })
   }, [])
 
-  // Initialize analytics
   useEffect(() => {
-    if (import.meta.env.PROD && window.gtag) {
-      window.gtag('config', import.meta.env.VITE_GA_MEASUREMENT_ID, {
-        page_title: document.title,
-        page_location: window.location.href,
-      })
+    const handleGlobalError = (event) => {
+      console.error('Global error in NeuroLearn:', event.error)
+      
+      if (event.error?.message?.includes('fetch') || event.error?.message?.includes('network')) {
+        console.log('Network error detected - optimizing for Chennai connectivity')
+      }
     }
+
+    window.addEventListener('error', handleGlobalError)
+    return () => window.removeEventListener('error', handleGlobalError)
   }, [])
 
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback} onError={handleGlobalError}>
+    <ErrorBoundary 
+      FallbackComponent={ErrorFallback}
+      onError={(error, errorInfo) => {
+        console.error('NeuroLearn Error Boundary:', error, errorInfo)
+      }}
+    >
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
           <Provider store={store}>
             <BrowserRouter>
-              <ThemeProvider>
-                <AppProvider>
-                  <AuthProvider>
-                    <div className="app" id="app-root">
-                      {/* Network Status Indicator */}
-                      <NetworkStatus />
-                      
-                      {/* PWA Install Prompt */}
-                      <PWAInstallPrompt />
-                      
-                      {/* Main App Router */}
-                      <Suspense fallback={<LoadingSpinner text="Loading application..." overlay />}>
-                        <AppRouter />
-                      </Suspense>
-                      
-                      {/* Toast Notifications */}
-                      <ToastContainer
-                        position="top-right"
-                        autoClose={5000}
-                        hideProgressBar={false}
-                        newestOnTop={false}
-                        closeOnClick
-                        rtl={false}
-                        pauseOnFocusLoss
-                        draggable
-                        pauseOnHover
-                        theme="colored"
-                        toastClassName="custom-toast"
-                        bodyClassName="custom-toast-body"
-                        progressClassName="custom-toast-progress"
-                      />
-                    </div>
-                  </AuthProvider>
-                </AppProvider>
-              </ThemeProvider>
+              <div className="app" style={{ minHeight: '100vh' }}>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <AppRouter />
+                </Suspense>
+                
+                <ToastContainer
+                  position="top-right"
+                  autoClose={4000}
+                  hideProgressBar={false}
+                  newestOnTop
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                  theme="colored"
+                  toastClassName="neurolearn-toast"
+                  style={{
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
             </BrowserRouter>
           </Provider>
           
-          {/* React Query DevTools - Only in development */}
-          {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+          {import.meta.env.DEV && (
+            <ReactQueryDevtools 
+              initialIsOpen={false}
+              position="bottom-right"
+            />
+          )}
         </QueryClientProvider>
       </HelmetProvider>
     </ErrorBoundary>

@@ -1,363 +1,399 @@
-import React, { useState, useContext } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import {
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  IconButton,
-  InputAdornment,
-  Divider,
-  Checkbox,
-  FormControlLabel,
-  Grid,
-  Card,
-  CardContent
-} from '@mui/material'
-import {
-  Visibility,
-  VisibilityOff,
-  Email,
-  Lock,
-  School,
-  Person,
-  Google,
-  Facebook,
-  GitHub
-} from '@mui/icons-material'
-import { useForm } from 'react-hook-form'
+import React, { useState, useEffect } from 'react'
+import { Helmet } from 'react-helmet-async'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import { useAuth } from '@context/AuthContext'
-import LoadingSpinner from '@components/common/LoadingSpinner'
-
 const Login = () => {
-  const { login, loading } = useAuth()
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    userType: 'student',
+    rememberMe: false
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState({})
+  
   const navigate = useNavigate()
   const location = useLocation()
   
-  const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
-  const [loginError, setLoginError] = useState('')
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting }
-  } = useForm({
-    defaultValues: {
-      email: '',
-      password: ''
+  // Get user type from navigation state
+  useEffect(() => {
+    const userType = location.state?.userType
+    if (userType) {
+      setFormData(prev => ({ ...prev, userType }))
     }
-  })
+    
+    // Show success message if coming from registration
+    if (location.state?.message) {
+      toast.success(location.state.message)
+    }
+  }, [location.state])
 
-  const from = location.state?.from?.pathname || '/'
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }))
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }))
+    }
+  }
 
-  const onSubmit = async (data) => {
+  const validateForm = () => {
+    const newErrors = {}
+    
+    if (!formData.email) {
+      newErrors.email = 'Email is required'
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid'
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required'
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (!validateForm()) return
+    
+    setIsLoading(true)
+    
     try {
-      setLoginError('')
-      const result = await login({
-        ...data,
-        rememberMe
-      })
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500))
       
-      // Redirect based on user role
-      if (result.user.role === 'teacher') {
-        navigate('/teacher/dashboard', { replace: true })
-      } else if (result.user.role === 'student') {
-        navigate('/student/dashboard', { replace: true })
-      } else {
-        navigate(from, { replace: true })
+      console.log('Login successful:', formData)
+      
+      // Store user data (you can use Redux/Context later)
+      const userData = {
+        email: formData.email,
+        userType: formData.userType,
+        name: formData.email.split('@')[0], // Extract name from email for demo
+        loginTime: new Date().toISOString()
       }
+      
+      // Store in localStorage for persistence
+      localStorage.setItem('neurolearn-user', JSON.stringify(userData))
+      localStorage.setItem('neurolearn-token', 'demo-jwt-token-' + Date.now())
+      
+      // Show success message
+      toast.success(`Welcome back! Redirecting to your ${formData.userType} dashboard...`)
+      
+      // Small delay to show success message
+      setTimeout(() => {
+        // Navigate based on user type to respective dashboard
+        if (formData.userType === 'student') {
+          navigate('/pages/student/studentdashboard', { replace: true })
+        } else if (formData.userType === 'teacher') {
+          navigate('/pages/teacher/teacherDashboard', { replace: true })
+        }
+      }, 1000)
+      
     } catch (error) {
-      setLoginError(error.response?.data?.message || 'Login failed. Please try again.')
+      console.error('Login error:', error)
+      setErrors({ submit: 'Login failed. Please check your credentials.' })
+      toast.error('Login failed. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleSocialLogin = (provider) => {
-    toast.info(`${provider} login coming soon!`)
+  const handleBackToHome = () => {
+    navigate('/')
   }
 
-  const handleTogglePasswordVisibility = () => {
-    setShowPassword(!showPassword)
-  }
-
-  if (loading) {
-    return <LoadingSpinner text="Authenticating..." overlay />
+  const loginStyles = {
+    container: {
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '2rem 1rem',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+    },
+    card: {
+      backgroundColor: 'white',
+      borderRadius: '20px',
+      padding: '3rem 2rem',
+      maxWidth: '450px',
+      width: '100%',
+      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+      position: 'relative',
+      overflow: 'hidden'
+    },
+    header: {
+      textAlign: 'center',
+      marginBottom: '2rem'
+    },
+    logo: {
+      fontSize: '2.5rem',
+      marginBottom: '1rem'
+    },
+    title: {
+      fontSize: '1.8rem',
+      fontWeight: '700',
+      color: '#2d3748',
+      marginBottom: '0.5rem'
+    },
+    subtitle: {
+      fontSize: '1rem',
+      color: '#718096',
+      marginBottom: '1rem'
+    },
+    userTypeBadge: {
+      display: 'inline-block',
+      padding: '0.5rem 1rem',
+      borderRadius: '20px',
+      fontSize: '0.875rem',
+      fontWeight: '500',
+      backgroundColor: formData.userType === 'student' ? '#e3f2fd' : '#e8f5e8',
+      color: formData.userType === 'student' ? '#1976d2' : '#2e7d32',
+      border: `1px solid ${formData.userType === 'student' ? '#bbdefb' : '#c8e6c9'}`
+    },
+    form: {
+      marginBottom: '2rem'
+    },
+    formGroup: {
+      marginBottom: '1.5rem'
+    },
+    label: {
+      display: 'block',
+      marginBottom: '0.5rem',
+      fontSize: '0.875rem',
+      fontWeight: '500',
+      color: '#2d3748'
+    },
+    input: {
+      width: '100%',
+      padding: '0.75rem 1rem',
+      border: '2px solid #e2e8f0',
+      borderRadius: '8px',
+      fontSize: '1rem',
+      transition: 'border-color 0.3s ease',
+      outline: 'none'
+    },
+    inputError: {
+      borderColor: '#e53e3e'
+    },
+    errorText: {
+      color: '#e53e3e',
+      fontSize: '0.75rem',
+      marginTop: '0.25rem'
+    },
+    checkboxContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      marginBottom: '1.5rem'
+    },
+    checkbox: {
+      width: '16px',
+      height: '16px'
+    },
+    checkboxLabel: {
+      fontSize: '0.875rem',
+      color: '#4a5568'
+    },
+    button: {
+      width: '100%',
+      padding: '0.875rem 1rem',
+      backgroundColor: '#1976d2',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '1rem',
+      fontWeight: '500',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.5rem'
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+      cursor: 'not-allowed'
+    },
+    links: {
+      textAlign: 'center',
+      marginTop: '1.5rem'
+    },
+    link: {
+      color: '#4299e1',
+      textDecoration: 'none',
+      fontSize: '0.875rem',
+      fontWeight: '500'
+    },
+    backButton: {
+      position: 'absolute',
+      top: '1rem',
+      left: '1rem',
+      background: 'none',
+      border: 'none',
+      fontSize: '1.5rem',
+      cursor: 'pointer',
+      padding: '0.5rem',
+      borderRadius: '50%',
+      transition: 'background-color 0.3s ease'
+    }
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        p: 2
-      }}
-    >
-      <Grid container maxWidth="lg" sx={{ height: '100%' }}>
-        {/* Left Side - Branding */}
-        <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'flex' } }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              color: 'white',
-              p: 4
-            }}
+    <>
+      <Helmet>
+        <title>Login - NeuroLearn | Chennai's Intelligent Assessment Platform</title>
+        <meta name="description" content="Login to NeuroLearn and access AI-powered assessment tools designed for Chennai students and teachers." />
+      </Helmet>
+
+      <div style={loginStyles.container}>
+        <div style={loginStyles.card}>
+          <button 
+            style={loginStyles.backButton}
+            onClick={handleBackToHome}
+            title="Back to Home"
           >
-            <School sx={{ fontSize: 80, mb: 3 }} />
-            <Typography variant="h3" gutterBottom align="center" fontWeight="bold">
-              Intelligent Assessment System
-            </Typography>
-            <Typography variant="h6" align="center" sx={{ opacity: 0.9, mb: 4 }}>
-              AI-Powered Learning & Assessment Platform
-            </Typography>
-            
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <Typography variant="body1" sx={{ mb: 2, opacity: 0.8 }}>
-                Transform your education experience with:
-              </Typography>
-              <Box sx={{ textAlign: 'left', maxWidth: 300 }}>
-                <Typography variant="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                  🤖 AI-Generated Questions
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                  📊 Real-time Analytics
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                  🎯 Personalized Feedback
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                  📈 Progress Tracking
-                </Typography>
-              </Box>
-            </Box>
+            ←
+          </button>
 
-            <Typography variant="caption" sx={{ opacity: 0.7 }}>
-              🇮🇳 Proudly made in Chennai, India
-            </Typography>
-          </Box>
-        </Grid>
+          <div style={loginStyles.header}>
+            <div style={loginStyles.logo}>🧠</div>
+            <h1 style={loginStyles.title}>Welcome Back!</h1>
+            <p style={loginStyles.subtitle}>Sign in to NeuroLearn</p>
+            <div style={loginStyles.userTypeBadge}>
+              {formData.userType === 'student' ? '👨‍🎓 Student' : '👨‍🏫 Teacher'} Login
+            </div>
+          </div>
 
-        {/* Right Side - Login Form */}
-        <Grid item xs={12} md={6}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '100vh',
-              p: 2
-            }}
-          >
-            <Paper
-              elevation={24}
-              sx={{
-                p: 4,
-                width: '100%',
-                maxWidth: 450,
-                borderRadius: 3,
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              {/* Header */}
-              <Box sx={{ textAlign: 'center', mb: 4 }}>
-                <School 
-                  sx={{ 
-                    fontSize: 48, 
-                    color: 'primary.main', 
-                    mb: 2,
-                    display: { xs: 'block', md: 'none' }
-                  }} 
-                />
-                <Typography variant="h4" gutterBottom fontWeight="bold">
-                  Welcome Back
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Sign in to your account to continue learning
-                </Typography>
-              </Box>
-
-              {/* Error Alert */}
-              {loginError && (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                  {loginError}
-                </Alert>
+          <form style={loginStyles.form} onSubmit={handleSubmit}>
+            <div style={loginStyles.formGroup}>
+              <label style={loginStyles.label} htmlFor="email">
+                Email Address
+              </label>
+              <input
+                style={{
+                  ...loginStyles.input,
+                  ...(errors.email ? loginStyles.inputError : {})
+                }}
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="Enter your email"
+                disabled={isLoading}
+              />
+              {errors.email && (
+                <div style={loginStyles.errorText}>{errors.email}</div>
               )}
+            </div>
 
-              {/* Login Form */}
-              <form onSubmit={handleSubmit(onSubmit)}>
-                <TextField
-                  fullWidth
-                  label="Email Address"
-                  type="email"
-                  margin="normal"
-                  {...register('email', {
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Invalid email address'
-                    }
-                  })}
-                  error={!!errors.email}
-                  helperText={errors.email?.message}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Email color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ mb: 2 }}
-                />
+            <div style={loginStyles.formGroup}>
+              <label style={loginStyles.label} htmlFor="password">
+                Password
+              </label>
+              <input
+                style={{
+                  ...loginStyles.input,
+                  ...(errors.password ? loginStyles.inputError : {})
+                }}
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="Enter your password"
+                disabled={isLoading}
+              />
+              {errors.password && (
+                <div style={loginStyles.errorText}>{errors.password}</div>
+              )}
+            </div>
 
-                <TextField
-                  fullWidth
-                  label="Password"
-                  type={showPassword ? 'text' : 'password'}
-                  margin="normal"
-                  {...register('password', {
-                    required: 'Password is required',
-                    minLength: {
-                      value: 6,
-                      message: 'Password must be at least 6 characters'
-                    }
-                  })}
-                  error={!!errors.password}
-                  helperText={errors.password?.message}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock color="action" />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={handleTogglePasswordVisibility}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ mb: 2 }}
-                />
+            <div style={loginStyles.checkboxContainer}>
+              <input
+                style={loginStyles.checkbox}
+                type="checkbox"
+                id="rememberMe"
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onChange={handleInputChange}
+                disabled={isLoading}
+              />
+              <label style={loginStyles.checkboxLabel} htmlFor="rememberMe">
+                Remember me
+              </label>
+            </div>
 
-                {/* Remember Me & Forgot Password */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        color="primary"
-                      />
-                    }
-                    label="Remember me"
-                  />
-                  <Link 
-                    to="/forgot-password" 
-                    style={{ 
-                      textDecoration: 'none', 
-                      color: '#1976d2',
-                      fontSize: '0.875rem'
-                    }}
-                  >
-                    Forgot password?
-                  </Link>
-                </Box>
+            {errors.submit && (
+              <div style={{ ...loginStyles.errorText, textAlign: 'center', marginBottom: '1rem' }}>
+                {errors.submit}
+              </div>
+            )}
 
-                {/* Login Button */}
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  size="large"
-                  disabled={isSubmitting}
-                  sx={{ 
-                    mb: 3, 
-                    py: 1.5,
-                    fontSize: '1rem',
-                    textTransform: 'none',
-                    borderRadius: 2
-                  }}
-                >
-                  {isSubmitting ? 'Signing in...' : 'Sign In'}
-                </Button>
+            <button
+              style={{
+                ...loginStyles.button,
+                ...(isLoading ? loginStyles.buttonDisabled : {})
+              }}
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid rgba(255, 255, 255, 0.3)',
+                    borderTop: '2px solid white',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  🔑 Sign In to {formData.userType === 'student' ? 'Student' : 'Teacher'} Dashboard
+                </>
+              )}
+            </button>
+          </form>
 
-                {/* Divider */}
-                <Divider sx={{ mb: 3 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Or continue with
-                  </Typography>
-                </Divider>
+          <div style={loginStyles.links}>
+            <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#718096' }}>
+              Don't have an account?{' '}
+              <Link 
+                to="/auth/register" 
+                state={{ userType: formData.userType }}
+                style={loginStyles.link}
+              >
+                Register here
+              </Link>
+            </p>
+            <Link to="/auth/forgot-password" style={loginStyles.link}>
+              Forgot Password?
+            </Link>
+          </div>
+        </div>
+      </div>
 
-                {/* Social Login Buttons */}
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid item xs={4}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      onClick={() => handleSocialLogin('Google')}
-                      sx={{ py: 1.5 }}
-                    >
-                      <Google />
-                    </Button>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      onClick={() => handleSocialLogin('Facebook')}
-                      sx={{ py: 1.5 }}
-                    >
-                      <Facebook />
-                    </Button>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      onClick={() => handleSocialLogin('GitHub')}
-                      sx={{ py: 1.5 }}
-                    >
-                      <GitHub />
-                    </Button>
-                  </Grid>
-                </Grid>
-
-                {/* Register Link */}
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Don't have an account?{' '}
-                    <Link 
-                      to="/register" 
-                      style={{ 
-                        textDecoration: 'none', 
-                        color: '#1976d2',
-                        fontWeight: 500
-                      }}
-                    >
-                      Sign up here
-                    </Link>
-                  </Typography>
-                </Box>
-              </form>
-            </Paper>
-          </Box>
-        </Grid>
-      </Grid>
-    </Box>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </>
   )
 }
 

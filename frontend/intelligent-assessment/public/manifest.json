@@ -1,0 +1,49 @@
+{
+  "name": "NeuroLearn - Intelligent Assessment Platform",
+  "short_name": "NeuroLearn",
+  "description": "AI-powered assessment platform for Chennai students and teachers",
+  "theme_color": "#1976d2",
+  "background_color": "#fafafa",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Take Quiz",
+      "short_name": "Quiz",
+      "description": "Start a new quiz",
+      "url": "/quiz",
+      "icons": [{"src": "/icons/quiz-96x96.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "View Results",
+      "short_name": "Results", 
+      "description": "Check your results",
+      "url": "/results",
+      "icons": [{"src": "/icons/results-96x96.png", "sizes": "96x96"}]
+    }
+  ]
+}

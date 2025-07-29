@@ -1,599 +1,580 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import {
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  IconButton,
-  InputAdornment,
-  Divider,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  Checkbox,
-  Grid,
-  Stepper,
-  Step,
-  StepLabel,
-  Card,
-  CardContent
-} from '@mui/material'
-import {
-  Visibility,
-  VisibilityOff,
-  Email,
-  Lock,
-  Person,
-  School,
-  Phone,
-  ArrowBack,
-  ArrowForward,
-  Google,
-  Facebook,
-  GitHub
-} from '@mui/icons-material'
-import { useForm } from 'react-hook-form'
+import React, { useState, useEffect } from 'react'
+import { Helmet } from 'react-helmet-async'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import { useAuth } from '@context/AuthContext'
-import LoadingSpinner from '@components/common/LoadingSpinner'
-
-const steps = ['Account Type', 'Personal Info', 'Account Details']
-
 const Register = () => {
-  const { register: registerUser, loading } = useAuth()
-  const navigate = useNavigate()
-  
-  const [activeStep, setActiveStep] = useState(0)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [userRole, setUserRole] = useState('')
-  const [acceptTerms, setAcceptTerms] = useState(false)
-  const [registerError, setRegisterError] = useState('')
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors, isSubmitting },
-    trigger,
-    getValues
-  } = useForm({
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      password: '',
-      confirmPassword: '',
-      institution: '',
-      class: '',
-      subject: ''
-    }
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    userType: 'student',
+    institution: '',
+    grade: '',
+    subject: '',
+    agreeTerms: false
   })
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState({})
+  
+  const navigate = useNavigate()
+  const location = useLocation()
+  
+  // Get user type from navigation state
+  useEffect(() => {
+    const userType = location.state?.userType
+    if (userType) {
+      setFormData(prev => ({ ...prev, userType }))
+    }
+  }, [location.state])
 
-  const password = watch('password')
-
-  const handleNext = async () => {
-    const isStepValid = await trigger(getStepFields(activeStep))
-    if (isStepValid) {
-      setActiveStep((prevActiveStep) => prevActiveStep + 1)
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }))
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }))
     }
   }
 
-  const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1)
+  const validateForm = () => {
+    const newErrors = {}
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required'
+    }
+    
+    if (!formData.email) {
+      newErrors.email = 'Email is required'
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid'
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required'
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match'
+    }
+    
+    if (!formData.institution.trim()) {
+      newErrors.institution = 'Institution is required'
+    }
+    
+    if (formData.userType === 'student' && !formData.grade) {
+      newErrors.grade = 'Grade is required for students'
+    }
+    
+    if (formData.userType === 'teacher' && !formData.subject.trim()) {
+      newErrors.subject = 'Subject is required for teachers'
+    }
+    
+    if (!formData.agreeTerms) {
+      newErrors.agreeTerms = 'You must agree to the terms and conditions'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
-  const getStepFields = (step) => {
-    switch (step) {
-      case 0:
-        return []
-      case 1:
-        return ['firstName', 'lastName', 'email', 'phone']
-      case 2:
-        return ['password', 'confirmPassword', 'institution']
-      default:
-        return []
-    }
-  }
-
-  const onSubmit = async (data) => {
-    if (!userRole) {
-      toast.error('Please select your role')
-      setActiveStep(0)
-      return
-    }
-
-    if (!acceptTerms) {
-      toast.error('Please accept the terms and conditions')
-      return
-    }
-
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (!validateForm()) return
+    
+    setIsLoading(true)
+    
     try {
-      setRegisterError('')
-      const userData = {
-        ...data,
-        role: userRole,
-        name: `${data.firstName} ${data.lastName}`
-      }
-
-      const result = await registerUser(userData)
-      toast.success('Registration successful! Welcome to the platform.')
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000))
       
-      // Redirect based on user role
-      if (result.user.role === 'teacher') {
-        navigate('/teacher/dashboard', { replace: true })
-      } else if (result.user.role === 'student') {
-        navigate('/student/dashboard', { replace: true })
+      console.log('Registration successful:', formData)
+      
+      // Store user data (you can use Redux/Context later)
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        userType: formData.userType,
+        institution: formData.institution,
+        grade: formData.grade,
+        subject: formData.subject,
+        registrationTime: new Date().toISOString()
       }
+      
+      // Store in localStorage for persistence
+      localStorage.setItem('neurolearn-user', JSON.stringify(userData))
+      localStorage.setItem('neurolearn-token', 'demo-jwt-token-' + Date.now())
+      
+      // Show success message
+      toast.success(`Account created successfully! Welcome to NeuroLearn, ${formData.name}!`)
+      
+      // Small delay to show success message
+      setTimeout(() => {
+        // Navigate directly to respective dashboard after registration
+        if (formData.userType === 'student') {
+          navigate('/pages/student/studentdashboard', { replace: true })
+        } else if (formData.userType === 'teacher') {
+          navigate('/pages/teacher/teacherDashboard', { replace: true })
+        }
+      }, 1500)
+      
     } catch (error) {
-      setRegisterError(error.response?.data?.message || 'Registration failed. Please try again.')
+      console.error('Registration error:', error)
+      setErrors({ submit: 'Registration failed. Please try again.' })
+      toast.error('Registration failed. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleSocialLogin = (provider) => {
-    toast.info(`${provider} registration coming soon!`)
+  const handleBackToHome = () => {
+    navigate('/')
   }
 
-  if (loading) {
-    return <LoadingSpinner text="Creating your account..." overlay />
-  }
-
-  const renderStepContent = (step) => {
-    switch (step) {
-      case 0:
-        return (
-          <Box>
-            <Typography variant="h6" gutterBottom align="center">
-              Choose Your Role
-            </Typography>
-            <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 4 }}>
-              Select how you'll be using the platform
-            </Typography>
-            
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <Card 
-                  sx={{ 
-                    cursor: 'pointer',
-                    border: userRole === 'student' ? 2 : 1,
-                    borderColor: userRole === 'student' ? 'primary.main' : 'divider',
-                    '&:hover': { elevation: 4 }
-                  }}
-                  onClick={() => setUserRole('student')}
-                >
-                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                    <Person sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-                    <Typography variant="h6" gutterBottom>
-                      Student
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Take quizzes, track progress, and get personalized feedback
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <Card 
-                  sx={{ 
-                    cursor: 'pointer',
-                    border: userRole === 'teacher' ? 2 : 1,
-                    borderColor: userRole === 'teacher' ? 'primary.main' : 'divider',
-                    '&:hover': { elevation: 4 }
-                  }}
-                  onClick={() => setUserRole('teacher')}
-                >
-                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                    <School sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-                    <Typography variant="h6" gutterBottom>
-                      Teacher
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Create assessments, manage students, and analyze performance
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </Box>
-        )
-
-      case 1:
-        return (
-          <Box>
-            <Typography variant="h6" gutterBottom align="center">
-              Personal Information
-            </Typography>
-            <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
-              Tell us about yourself
-            </Typography>
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="First Name"
-                  {...register('firstName', {
-                    required: 'First name is required',
-                    minLength: {
-                      value: 2,
-                      message: 'First name must be at least 2 characters'
-                    }
-                  })}
-                  error={!!errors.firstName}
-                  helperText={errors.firstName?.message}
-                />
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Last Name"
-                  {...register('lastName', {
-                    required: 'Last name is required',
-                    minLength: {
-                      value: 2,
-                      message: 'Last name must be at least 2 characters'
-                    }
-                  })}
-                  error={!!errors.lastName}
-                  helperText={errors.lastName?.message}
-                />
-              </Grid>
-            </Grid>
-
-            <TextField
-              fullWidth
-              label="Email Address"
-              type="email"
-              margin="normal"
-              {...register('email', {
-                required: 'Email is required',
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Invalid email address'
-                }
-              })}
-              error={!!errors.email}
-              helperText={errors.email?.message}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Email color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Phone Number"
-              type="tel"
-              margin="normal"
-              {...register('phone', {
-                required: 'Phone number is required',
-                pattern: {
-                  value: /^[\+]?[1-9][\d]{0,15}$/,
-                  message: 'Invalid phone number'
-                }
-              })}
-              error={!!errors.phone}
-              helperText={errors.phone?.message}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Phone color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Box>
-        )
-
-      case 2:
-        return (
-          <Box>
-            <Typography variant="h6" gutterBottom align="center">
-              Account Security
-            </Typography>
-            <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
-              Set up your password and institution details
-            </Typography>
-
-            <TextField
-              fullWidth
-              label="Institution/School Name"
-              margin="normal"
-              {...register('institution', {
-                required: 'Institution name is required'
-              })}
-              error={!!errors.institution}
-              helperText={errors.institution?.message}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <School color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            {userRole === 'student' && (
-              <TextField
-                fullWidth
-                label="Class/Grade"
-                margin="normal"
-                {...register('class')}
-                placeholder="e.g., 10th Grade, Class XII"
-              />
-            )}
-
-            {userRole === 'teacher' && (
-              <TextField
-                fullWidth
-                label="Subject Specialization"
-                margin="normal"
-                {...register('subject')}
-                placeholder="e.g., Mathematics, Physics, Chemistry"
-              />
-            )}
-
-            <TextField
-              fullWidth
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              margin="normal"
-              {...register('password', {
-                required: 'Password is required',
-                minLength: {
-                  value: 8,
-                  message: 'Password must be at least 8 characters'
-                },
-                pattern: {
-                  value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                  message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-                }
-              })}
-              error={!!errors.password}
-              helperText={errors.password?.message}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock color="action" />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Confirm Password"
-              type={showConfirmPassword ? 'text' : 'password'}
-              margin="normal"
-              {...register('confirmPassword', {
-                required: 'Please confirm your password',
-                validate: value =>
-                  value === password || 'Passwords do not match'
-              })}
-              error={!!errors.confirmPassword}
-              helperText={errors.confirmPassword?.message}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock color="action" />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      edge="end"
-                    >
-                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={acceptTerms}
-                  onChange={(e) => setAcceptTerms(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label={
-                <Typography variant="body2">
-                  I agree to the{' '}
-                  <Link to="/terms" style={{ color: '#1976d2' }}>
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link to="/privacy" style={{ color: '#1976d2' }}>
-                    Privacy Policy
-                  </Link>
-                </Typography>
-              }
-              sx={{ mt: 2 }}
-            />
-          </Box>
-        )
-
-      default:
-        return 'Unknown step'
+  const registerStyles = {
+    container: {
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '2rem 1rem',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+    },
+    card: {
+      backgroundColor: 'white',
+      borderRadius: '20px',
+      padding: '3rem 2rem',
+      maxWidth: '500px',
+      width: '100%',
+      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+      position: 'relative',
+      overflow: 'hidden',
+      maxHeight: '90vh',
+      overflowY: 'auto'
+    },
+    header: {
+      textAlign: 'center',
+      marginBottom: '2rem'
+    },
+    logo: {
+      fontSize: '2.5rem',
+      marginBottom: '1rem'
+    },
+    title: {
+      fontSize: '1.8rem',
+      fontWeight: '700',
+      color: '#2d3748',
+      marginBottom: '0.5rem'
+    },
+    subtitle: {
+      fontSize: '1rem',
+      color: '#718096',
+      marginBottom: '1rem'
+    },
+    userTypeBadge: {
+      display: 'inline-block',
+      padding: '0.5rem 1rem',
+      borderRadius: '20px',
+      fontSize: '0.875rem',
+      fontWeight: '500',
+      backgroundColor: formData.userType === 'student' ? '#e3f2fd' : '#e8f5e8',
+      color: formData.userType === 'student' ? '#1976d2' : '#2e7d32',
+      border: `1px solid ${formData.userType === 'student' ? '#bbdefb' : '#c8e6c9'}`
+    },
+    form: {
+      marginBottom: '1.5rem'
+    },
+    formGroup: {
+      marginBottom: '1.5rem'
+    },
+    formRow: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '1rem',
+      marginBottom: '1.5rem'
+    },
+    label: {
+      display: 'block',
+      marginBottom: '0.5rem',
+      fontSize: '0.875rem',
+      fontWeight: '500',
+      color: '#2d3748'
+    },
+    input: {
+      width: '100%',
+      padding: '0.75rem 1rem',
+      border: '2px solid #e2e8f0',
+      borderRadius: '8px',
+      fontSize: '1rem',
+      transition: 'border-color 0.3s ease',
+      outline: 'none'
+    },
+    select: {
+      width: '100%',
+      padding: '0.75rem 1rem',
+      border: '2px solid #e2e8f0',
+      borderRadius: '8px',
+      fontSize: '1rem',
+      transition: 'border-color 0.3s ease',
+      outline: 'none',
+      backgroundColor: 'white'
+    },
+    inputError: {
+      borderColor: '#e53e3e'
+    },
+    errorText: {
+      color: '#e53e3e',
+      fontSize: '0.75rem',
+      marginTop: '0.25rem'
+    },
+    checkboxContainer: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: '0.5rem',
+      marginBottom: '1.5rem'
+    },
+    checkbox: {
+      width: '16px',
+      height: '16px',
+      marginTop: '2px'
+    },
+    checkboxLabel: {
+      fontSize: '0.875rem',
+      color: '#4a5568',
+      lineHeight: '1.4'
+    },
+    button: {
+      width: '100%',
+      padding: '0.875rem 1rem',
+      backgroundColor: '#2e7d32',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '1rem',
+      fontWeight: '500',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.5rem'
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+      cursor: 'not-allowed'
+    },
+    links: {
+      textAlign: 'center',
+      marginTop: '1.5rem'
+    },
+    link: {
+      color: '#4299e1',
+      textDecoration: 'none',
+      fontSize: '0.875rem',
+      fontWeight: '500'
+    },
+    backButton: {
+      position: 'absolute',
+      top: '1rem',
+      left: '1rem',
+      background: 'none',
+      border: 'none',
+      fontSize: '1.5rem',
+      cursor: 'pointer',
+      padding: '0.5rem',
+      borderRadius: '50%',
+      transition: 'background-color 0.3s ease'
     }
   }
+
+  const grades = [
+    'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10',
+    'Class 11', 'Class 12', 'Undergraduate', 'Postgraduate'
+  ]
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        p: 2
-      }}
-    >
-      <Paper
-        elevation={24}
-        sx={{
-          p: 4,
-          width: '100%',
-          maxWidth: 600,
-          borderRadius: 3,
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)'
-        }}
-      >
-        {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <School sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h4" gutterBottom fontWeight="bold">
-            Join Our Platform
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Create your account and start your learning journey
-          </Typography>
-        </Box>
+    <>
+      <Helmet>
+        <title>Register - NeuroLearn | Join Chennai's Smart Learning Platform</title>
+        <meta name="description" content="Register for NeuroLearn and join thousands of Chennai students and teachers using AI-powered assessment tools." />
+      </Helmet>
 
-        {/* Stepper */}
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+      <div style={registerStyles.container}>
+        <div style={registerStyles.card}>
+          <button 
+            style={registerStyles.backButton}
+            onClick={handleBackToHome}
+            title="Back to Home"
+          >
+            ←
+          </button>
 
-        {/* Error Alert */}
-        {registerError && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {registerError}
-          </Alert>
-        )}
+          <div style={registerStyles.header}>
+            <div style={registerStyles.logo}>🧠</div>
+            <h1 style={registerStyles.title}>Join NeuroLearn!</h1>
+            <p style={registerStyles.subtitle}>Create your account</p>
+            <div style={registerStyles.userTypeBadge}>
+              {formData.userType === 'student' ? '👨‍🎓 Student' : '👨‍🏫 Teacher'} Registration
+            </div>
+          </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Box sx={{ mb: 4 }}>
-            {renderStepContent(activeStep)}
-          </Box>
+          <form style={registerStyles.form} onSubmit={handleSubmit}>
+            <div style={registerStyles.formGroup}>
+              <label style={registerStyles.label} htmlFor="name">
+                Full Name *
+              </label>
+              <input
+                style={{
+                  ...registerStyles.input,
+                  ...(errors.name ? registerStyles.inputError : {})
+                }}
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Enter your full name"
+                disabled={isLoading}
+              />
+              {errors.name && (
+                <div style={registerStyles.errorText}>{errors.name}</div>
+              )}
+            </div>
 
-          {/* Navigation Buttons */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-            <Button
-              disabled={activeStep === 0}
-              onClick={handleBack}
-              startIcon={<ArrowBack />}
-              sx={{ visibility: activeStep === 0 ? 'hidden' : 'visible' }}
-            >
-              Back
-            </Button>
+            <div style={registerStyles.formGroup}>
+              <label style={registerStyles.label} htmlFor="email">
+                Email Address *
+              </label>
+              <input
+                style={{
+                  ...registerStyles.input,
+                  ...(errors.email ? registerStyles.inputError : {})
+                }}
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="Enter your email"
+                disabled={isLoading}
+              />
+              {errors.email && (
+                <div style={registerStyles.errorText}>{errors.email}</div>
+              )}
+            </div>
 
-            {activeStep === steps.length - 1 ? (
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isSubmitting || !userRole || (activeStep === 2 && !acceptTerms)}
-                sx={{ minWidth: 120 }}
-              >
-                {isSubmitting ? 'Creating...' : 'Create Account'}
-              </Button>
+            <div style={registerStyles.formRow}>
+              <div>
+                <label style={registerStyles.label} htmlFor="password">
+                  Password *
+                </label>
+                <input
+                  style={{
+                    ...registerStyles.input,
+                    ...(errors.password ? registerStyles.inputError : {})
+                  }}
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder="Enter password"
+                  disabled={isLoading}
+                />
+                {errors.password && (
+                  <div style={registerStyles.errorText}>{errors.password}</div>
+                )}
+              </div>
+
+              <div>
+                <label style={registerStyles.label} htmlFor="confirmPassword">
+                  Confirm Password *
+                </label>
+                <input
+                  style={{
+                    ...registerStyles.input,
+                    ...(errors.confirmPassword ? registerStyles.inputError : {})
+                  }}
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder="Confirm password"
+                  disabled={isLoading}
+                />
+                {errors.confirmPassword && (
+                  <div style={registerStyles.errorText}>{errors.confirmPassword}</div>
+                )}
+              </div>
+            </div>
+
+            <div style={registerStyles.formGroup}>
+              <label style={registerStyles.label} htmlFor="institution">
+                Institution/School *
+              </label>
+              <input
+                style={{
+                  ...registerStyles.input,
+                  ...(errors.institution ? registerStyles.inputError : {})
+                }}
+                type="text"
+                id="institution"
+                name="institution"
+                value={formData.institution}
+                onChange={handleInputChange}
+                placeholder="Enter your school/college name"
+                disabled={isLoading}
+              />
+              {errors.institution && (
+                <div style={registerStyles.errorText}>{errors.institution}</div>
+              )}
+            </div>
+
+            {formData.userType === 'student' ? (
+              <div style={registerStyles.formGroup}>
+                <label style={registerStyles.label} htmlFor="grade">
+                  Grade/Class *
+                </label>
+                <select
+                  style={{
+                    ...registerStyles.select,
+                    ...(errors.grade ? registerStyles.inputError : {})
+                  }}
+                  id="grade"
+                  name="grade"
+                  value={formData.grade}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                >
+                  <option value="">Select your grade</option>
+                  {grades.map(grade => (
+                    <option key={grade} value={grade}>{grade}</option>
+                  ))}
+                </select>
+                {errors.grade && (
+                  <div style={registerStyles.errorText}>{errors.grade}</div>
+                )}
+              </div>
             ) : (
-              <Button
-                variant="contained"
-                onClick={handleNext}
-                endIcon={<ArrowForward />}
-                disabled={activeStep === 0 && !userRole}
-                sx={{ minWidth: 120 }}
-              >
-                Next
-              </Button>
+              <div style={registerStyles.formGroup}>
+                <label style={registerStyles.label} htmlFor="subject">
+                  Subject Specialization *
+                </label>
+                <input
+                  style={{
+                    ...registerStyles.input,
+                    ...(errors.subject ? registerStyles.inputError : {})
+                  }}
+                  type="text"
+                  id="subject"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Mathematics, Science, English"
+                  disabled={isLoading}
+                />
+                {errors.subject && (
+                  <div style={registerStyles.errorText}>{errors.subject}</div>
+                )}
+              </div>
             )}
-          </Box>
-        </form>
 
-        {/* Social Login (only on first step) */}
-        {activeStep === 0 && (
-          <>
-            <Divider sx={{ mb: 3 }}>
-              <Typography variant="caption" color="text.secondary">
-                Or register with
-              </Typography>
-            </Divider>
+            <div style={registerStyles.checkboxContainer}>
+              <input
+                style={{
+                  ...registerStyles.checkbox,
+                  ...(errors.agreeTerms ? { outline: '2px solid #e53e3e' } : {})
+                }}
+                type="checkbox"
+                id="agreeTerms"
+                name="agreeTerms"
+                checked={formData.agreeTerms}
+                onChange={handleInputChange}
+                disabled={isLoading}
+              />
+              <label style={registerStyles.checkboxLabel} htmlFor="agreeTerms">
+                I agree to the{' '}
+                <Link to="/terms" style={registerStyles.link}>
+                  Terms of Service
+                </Link>
+                {' '}and{' '}
+                <Link to="/privacy" style={registerStyles.link}>
+                  Privacy Policy
+                </Link>
+              </label>
+            </div>
+            {errors.agreeTerms && (
+              <div style={{ ...registerStyles.errorText, marginTop: '-1rem', marginBottom: '1rem' }}>
+                {errors.agreeTerms}
+              </div>
+            )}
 
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={4}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={() => handleSocialLogin('Google')}
-                  sx={{ py: 1.5 }}
-                >
-                  <Google />
-                </Button>
-              </Grid>
-              <Grid item xs={4}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={() => handleSocialLogin('Facebook')}
-                  sx={{ py: 1.5 }}
-                >
-                  <Facebook />
-                </Button>
-              </Grid>
-              <Grid item xs={4}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={() => handleSocialLogin('GitHub')}
-                  sx={{ py: 1.5 }}
-                >
-                  <GitHub />
-                </Button>
-              </Grid>
-            </Grid>
-          </>
-        )}
+            {errors.submit && (
+              <div style={{ ...registerStyles.errorText, textAlign: 'center', marginBottom: '1rem' }}>
+                {errors.submit}
+              </div>
+            )}
 
-        {/* Login Link */}
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary">
-            Already have an account?{' '}
-            <Link 
-              to="/login" 
-              style={{ 
-                textDecoration: 'none', 
-                color: '#1976d2',
-                fontWeight: 500
+            <button
+              style={{
+                ...registerStyles.button,
+                ...(isLoading ? registerStyles.buttonDisabled : {})
               }}
+              type="submit"
+              disabled={isLoading}
             >
-              Sign in here
-            </Link>
-          </Typography>
-        </Box>
-      </Paper>
-    </Box>
+              {isLoading ? (
+                <>
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid rgba(255, 255, 255, 0.3)',
+                    borderTop: '2px solid white',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  📝 Create {formData.userType === 'student' ? 'Student' : 'Teacher'} Account
+                </>
+              )}
+            </button>
+          </form>
+
+          <div style={registerStyles.links}>
+            <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#718096' }}>
+              Already have an account?{' '}
+              <Link 
+                to="/auth/login" 
+                state={{ userType: formData.userType }}
+                style={registerStyles.link}
+              >
+                Login here
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </>
   )
 }
 

@@ -1,48 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Chip,
-  LinearProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  Alert,
-  Tabs,
-  Tab,
-  Divider
-} from '@mui/material'
-import {
-  CloudUpload,
-  Delete,
-  Visibility,
-  Edit,
-  AutoAwesome,
-  CheckCircle,
-  Description,
-  School,
-  Analytics,
-  Quiz
-} from '@mui/icons-material'
-
-import SyllabusUpload from '@components/teacher/SyllabusUpload'
-import { teacherService } from '@services/teacher.service'
-import LoadingSpinner from '@components/common/LoadingSpinner'
+import { Helmet } from 'react-helmet-async'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { teacherService } from '../../services/teacher.service'
 
 const ManageSyllabus = () => {
+  const navigate = useNavigate()
+  const [user, setUser] = useState(null)
   const [syllabi, setSyllabi] = useState([])
   const [loading, setLoading] = useState(true)
   const [tabValue, setTabValue] = useState(0)
@@ -50,76 +14,27 @@ const ManageSyllabus = () => {
   const [showUpload, setShowUpload] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [generatingQuestions, setGeneratingQuestions] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [dragActive, setDragActive] = useState(false)
 
   useEffect(() => {
-    fetchSyllabi()
-  }, [])
+    // Check authentication
+    const userData = localStorage.getItem('neurolearn-user')
+    if (userData) {
+      setUser(JSON.parse(userData))
+      fetchSyllabi()
+    } else {
+      navigate('/auth/login')
+    }
+  }, [navigate])
 
   const fetchSyllabi = async () => {
     try {
       setLoading(true)
-      
-      // Mock data for demonstration
-      const mockSyllabi = [
-        {
-          id: 1,
-          name: 'Advanced Mathematics - Grade 12',
-          fileName: 'math_grade12_syllabus.pdf',
-          uploadDate: '2024-01-15',
-          status: 'processed',
-          size: '2.5 MB',
-          type: 'PDF',
-          chapters: 15,
-          topics: 45,
-          questionsGenerated: 120,
-          difficulty: 'Advanced',
-          subject: 'Mathematics',
-          description: 'Comprehensive syllabus covering calculus, algebra, and statistics for grade 12 students.',
-          aiAnalysis: {
-            confidence: 92,
-            keyTopics: ['Differential Calculus', 'Integral Calculus', 'Probability', 'Statistics'],
-            estimatedQuestions: 150,
-            difficultyDistribution: {
-              easy: 30,
-              medium: 50,
-              hard: 20
-            }
-          }
-        },
-        {
-          id: 2,
-          name: 'Physics Mechanics - Class 11',
-          fileName: 'physics_mechanics.docx',
-          uploadDate: '2024-01-12',
-          status: 'processing',
-          size: '1.8 MB',
-          type: 'DOCX',
-          chapters: 8,
-          topics: 24,
-          questionsGenerated: 0,
-          difficulty: 'Intermediate',
-          subject: 'Physics',
-          description: 'Mechanics syllabus covering motion, forces, and energy for class 11 physics.',
-          progress: 65
-        },
-        {
-          id: 3,
-          name: 'Organic Chemistry Basics',
-          fileName: 'organic_chemistry.pdf',
-          uploadDate: '2024-01-10',
-          status: 'draft',
-          size: '3.2 MB',
-          type: 'PDF',
-          chapters: 12,
-          topics: 36,
-          questionsGenerated: 85,
-          difficulty: 'Beginner',
-          subject: 'Chemistry',
-          description: 'Introduction to organic chemistry concepts and reactions.'
-        }
-      ]
-      
-      setSyllabi(mockSyllabi)
+      const response = await teacherService.getSyllabusList()
+      if (response.success) {
+        setSyllabi(response.data)
+      }
     } catch (err) {
       toast.error('Failed to load syllabi')
     } finally {
@@ -128,6 +43,8 @@ const ManageSyllabus = () => {
   }
 
   const handleDeleteSyllabus = async (syllabusId) => {
+    if (!window.confirm('Are you sure you want to delete this syllabus?')) return
+
     try {
       await teacherService.deleteSyllabus(syllabusId)
       setSyllabi(prev => prev.filter(s => s.id !== syllabusId))
@@ -140,20 +57,21 @@ const ManageSyllabus = () => {
   const handleGenerateQuestions = async (syllabusId) => {
     try {
       setGeneratingQuestions(true)
-      await teacherService.generateQuestions(syllabusId, {
+      const response = await teacherService.generateQuestions(syllabusId, {
         count: 50,
         difficulty: 'mixed',
         types: ['mcq', 'short_answer', 'essay']
       })
       
-      // Update syllabus status
-      setSyllabi(prev => prev.map(s => 
-        s.id === syllabusId 
-          ? { ...s, questionsGenerated: s.questionsGenerated + 50, status: 'processed' }
-          : s
-      ))
-      
-      toast.success('Questions generated successfully!')
+      if (response.success) {
+        // Update syllabus status
+        setSyllabi(prev => prev.map(s =>
+          s.id === syllabusId
+            ? { ...s, questionsGenerated: (s.questionsGenerated || 0) + 50, status: 'processed' }
+            : s
+        ))
+        toast.success('Questions generated successfully!')
+      }
     } catch (err) {
       toast.error('Failed to generate questions')
     } finally {
@@ -161,462 +79,556 @@ const ManageSyllabus = () => {
     }
   }
 
-  const handleUploadSuccess = (newSyllabus) => {
-    setSyllabi(prev => [...prev, newSyllabus])
-    setShowUpload(false)
-    toast.success('Syllabus uploaded and processed successfully!')
+  const handleFileUpload = async (files) => {
+    const file = files[0]
+    if (!file) return
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Please upload a PDF, DOC, DOCX, or TXT file')
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size must be less than 10MB')
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('syllabus', file)
+    formData.append('name', file.name.replace(/\.[^/.]+$/, ''))
+    formData.append('subject', user.subject || 'General')
+
+    try {
+      setUploadProgress(0)
+      const response = await teacherService.uploadSyllabus(formData)
+      
+      if (response.success) {
+        const newSyllabus = {
+          id: Date.now(), // Temporary ID
+          name: file.name.replace(/\.[^/.]+$/, ''),
+          fileName: file.name,
+          uploadDate: new Date().toISOString().split('T')[0],
+          status: 'processing',
+          size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+          type: file.type.includes('pdf') ? 'PDF' : file.type.includes('word') ? 'DOCX' : 'TXT',
+          chapters: 0,
+          topics: 0,
+          questionsGenerated: 0,
+          difficulty: 'Intermediate',
+          subject: user.subject || 'General',
+          description: `Uploaded syllabus: ${file.name}`,
+          progress: 0
+        }
+
+        setSyllabi(prev => [...prev, newSyllabus])
+        setShowUpload(false)
+        toast.success('Syllabus uploaded successfully! Processing will begin shortly.')
+
+        // Simulate processing progress
+        simulateProcessing(newSyllabus.id)
+      }
+    } catch (err) {
+      toast.error('Failed to upload syllabus')
+    } finally {
+      setUploadProgress(0)
+    }
+  }
+
+  const simulateProcessing = (syllabusId) => {
+    let progress = 0
+    const interval = setInterval(() => {
+      progress += Math.random() * 20
+      if (progress >= 100) {
+        progress = 100
+        clearInterval(interval)
+        
+        // Update syllabus status to processed
+        setSyllabi(prev => prev.map(s =>
+          s.id === syllabusId
+            ? { 
+                ...s, 
+                status: 'processed', 
+                progress: 100,
+                chapters: Math.floor(Math.random() * 15) + 5,
+                topics: Math.floor(Math.random() * 40) + 20,
+                questionsGenerated: Math.floor(Math.random() * 50) + 30
+              }
+            : s
+        ))
+        toast.success('Syllabus processing completed!')
+      } else {
+        setSyllabi(prev => prev.map(s =>
+          s.id === syllabusId ? { ...s, progress: Math.floor(progress) } : s
+        ))
+      }
+    }, 1000)
+  }
+
+  const handleDrag = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileUpload([e.dataTransfer.files[0]])
+    }
+  }
+
+  const handleBackToDashboard = () => {
+    navigate('/pages/teacher/teacherDashboard')
   }
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'processed': return 'success'
-      case 'processing': return 'warning'
-      case 'draft': return 'info'
-      case 'error': return 'error'
-      default: return 'default'
+      case 'processed': return '#4caf50'
+      case 'processing': return '#ff9800'
+      case 'draft': return '#2196f3'
+      case 'error': return '#f44336'
+      default: return '#757575'
     }
   }
 
   const getFileIcon = (type) => {
-    switch (type.toLowerCase()) {
+    switch (type?.toLowerCase()) {
       case 'pdf': return '📄'
-      case 'docx': 
+      case 'docx':
       case 'doc': return '📝'
       case 'txt': return '📋'
       default: return '📁'
     }
   }
 
-  if (loading) {
-    return <LoadingSpinner text="Loading syllabi..." />
+  const syllabusStyles = {
+    container: {
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 25%, #764ba2 75%)',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      padding: '2rem'
+    },
+    header: {
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: '1.5rem 2rem',
+      marginBottom: '2rem',
+      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    },
+    title: {
+      fontSize: '1.8rem',
+      fontWeight: '700',
+      color: '#2d3748',
+      margin: 0
+    },
+    backButton: {
+      padding: '0.5rem 1rem',
+      backgroundColor: '#4299e1',
+      color: 'white',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontSize: '0.875rem',
+      fontWeight: '500'
+    },
+    content: {
+      maxWidth: '1200px',
+      margin: '0 auto'
+    },
+    uploadButton: {
+      padding: '0.75rem 1.5rem',
+      backgroundColor: 'white',
+      color: '#667eea',
+      border: 'none',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      fontSize: '1rem',
+      fontWeight: '500',
+      marginBottom: '2rem'
+    },
+    uploadArea: {
+      border: `2px dashed ${dragActive ? '#2e7d32' : '#e2e8f0'}`,
+      borderRadius: '12px',
+      padding: '3rem 2rem',
+      textAlign: 'center',
+      backgroundColor: dragActive ? '#f0f9ff' : 'white',
+      transition: 'all 0.3s ease',
+      cursor: 'pointer'
+    },
+    syllabusGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+      gap: '1.5rem'
+    },
+    syllabusCard: {
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: '1.5rem',
+      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.08)',
+      transition: 'transform 0.3s ease'
+    },
+    progressBar: {
+      width: '100%',
+      height: '8px',
+      backgroundColor: '#e2e8f0',
+      borderRadius: '4px',
+      overflow: 'hidden',
+      marginBottom: '1rem'
+    },
+    progressFill: {
+      height: '100%',
+      backgroundColor: '#ff9800',
+      transition: 'width 0.3s ease'
+    }
+  }
+
+  if (!user) {
+    return (
+      <div style={syllabusStyles.container}>
+        <div style={{ textAlign: 'center', color: 'white', paddingTop: '4rem' }}>
+          <h2>Loading...</h2>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box>
-          <Typography variant="h4" gutterBottom>
-            Manage Syllabus
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Upload, manage, and generate AI questions from your course syllabi
-          </Typography>
-        </Box>
-        
-        <Button
-          variant="contained"
-          startIcon={<CloudUpload />}
-          onClick={() => setShowUpload(true)}
-          size="large"
-        >
-          Upload Syllabus
-        </Button>
-      </Box>
+    <>
+      <Helmet>
+        <title>Manage Syllabus - NeuroLearn | {user.name}</title>
+        <meta name="description" content="Upload and manage your course syllabi to generate AI-powered questions for your students." />
+      </Helmet>
 
-      {/* Tabs */}
-      <Paper sx={{ mb: 3 }}>
-        <Tabs
-          value={tabValue}
-          onChange={(e, newValue) => setTabValue(newValue)}
-          variant="fullWidth"
-        >
-          <Tab label={`All Syllabi (${syllabi.length})`} />
-          <Tab label={`Processed (${syllabi.filter(s => s.status === 'processed').length})`} />
-          <Tab label={`Processing (${syllabi.filter(s => s.status === 'processing').length})`} />
-          <Tab label={`Drafts (${syllabi.filter(s => s.status === 'draft').length})`} />
-        </Tabs>
-      </Paper>
+      <div style={syllabusStyles.container}>
+        {/* Header */}
+        <div style={syllabusStyles.header}>
+          <h1 style={syllabusStyles.title}>Manage Syllabus</h1>
+          <button style={syllabusStyles.backButton} onClick={handleBackToDashboard}>
+            ← Back to Dashboard
+          </button>
+        </div>
 
-      {/* Stats Overview */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Description sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-              <Typography variant="h4" color="primary.main">
+        <div style={syllabusStyles.content}>
+          {/* Upload Section */}
+          {showUpload ? (
+            <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '2rem', marginBottom: '2rem', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)' }}>
+              <h2 style={{ marginBottom: '1rem' }}>Upload New Syllabus</h2>
+              
+              <div
+                style={syllabusStyles.uploadArea}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById('syllabusFile').click()}
+              >
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📄</div>
+                <h3>Drag and drop your syllabus file here</h3>
+                <p style={{ color: '#718096', marginBottom: '1rem' }}>
+                  or click to browse files
+                </p>
+                <p style={{ fontSize: '0.875rem', color: '#718096' }}>
+                  Supported formats: PDF, DOC, DOCX, TXT (Max 10MB)
+                </p>
+                
+                <input
+                  id="syllabusFile"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt"
+                  style={{ display: 'none' }}
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+                <button
+                  style={{ ...syllabusStyles.backButton, backgroundColor: '#e2e8f0', color: '#2d3748' }}
+                  onClick={() => setShowUpload(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              style={syllabusStyles.uploadButton}
+              onClick={() => setShowUpload(true)}
+            >
+              Upload Syllabus
+            </button>
+          )}
+
+          {/* Stats Overview */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1rem',
+            marginBottom: '2rem'
+          }}>
+            <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.5rem', textAlign: 'center', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2d3748', marginBottom: '0.5rem' }}>
                 {syllabi.length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Syllabi
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Quiz sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-              <Typography variant="h4" color="success.main">
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#718096' }}>Total Syllabi</div>
+            </div>
+            <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.5rem', textAlign: 'center', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2d3748', marginBottom: '0.5rem' }}>
                 {syllabi.reduce((acc, s) => acc + (s.questionsGenerated || 0), 0)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Questions Generated
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <School sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
-              <Typography variant="h4" color="info.main">
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#718096' }}>Questions Generated</div>
+            </div>
+            <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.5rem', textAlign: 'center', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2d3748', marginBottom: '0.5rem' }}>
                 {syllabi.reduce((acc, s) => acc + (s.chapters || 0), 0)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Chapters
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <AutoAwesome sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
-              <Typography variant="h4" color="warning.main">
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#718096' }}>Total Chapters</div>
+            </div>
+            <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.5rem', textAlign: 'center', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2d3748', marginBottom: '0.5rem' }}>
                 {syllabi.filter(s => s.status === 'processed').length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                AI Ready
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#718096' }}>AI Ready</div>
+            </div>
+          </div>
 
-      {/* Syllabi Grid */}
-      <Grid container spacing={3}>
-        {syllabi
-          .filter(syllabus => {
-            if (tabValue === 0) return true
-            if (tabValue === 1) return syllabus.status === 'processed'
-            if (tabValue === 2) return syllabus.status === 'processing'
-            if (tabValue === 3) return syllabus.status === 'draft'
-            return true
-          })
-          .map((syllabus) => (
-            <Grid item xs={12} md={6} lg={4} key={syllabus.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardContent sx={{ flexGrow: 1 }}>
-                  {/* Header */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography sx={{ fontSize: '1.5rem' }}>
-                        {getFileIcon(syllabus.type)}
-                      </Typography>
-                      <Chip
-                        label={syllabus.status}
-                        color={getStatusColor(syllabus.status)}
-                        size="small"
+          {/* Syllabi Grid */}
+          <div style={syllabusStyles.syllabusGrid}>
+            {syllabi.map((syllabus) => (
+              <div 
+                key={syllabus.id} 
+                style={syllabusStyles.syllabusCard}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1.5rem' }}>{getFileIcon(syllabus.type)}</span>
+                    <span style={{ fontSize: '0.875rem', color: '#718096' }}>{syllabus.size}</span>
+                  </div>
+                  <div style={{
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '12px',
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                    color: 'white',
+                    backgroundColor: getStatusColor(syllabus.status)
+                  }}>
+                    {syllabus.status.toUpperCase()}
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#2d3748', marginBottom: '0.5rem' }}>
+                  {syllabus.name}
+                </h3>
+                <p style={{ fontSize: '0.875rem', color: '#718096', marginBottom: '1rem' }}>
+                  {syllabus.description}
+                </p>
+
+                {/* Progress Bar for Processing */}
+                {syllabus.status === 'processing' && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Processing...</span>
+                      <span style={{ fontSize: '0.875rem', color: '#718096' }}>{syllabus.progress || 0}%</span>
+                    </div>
+                    <div style={syllabusStyles.progressBar}>
+                      <div 
+                        style={{
+                          ...syllabusStyles.progressFill,
+                          width: `${syllabus.progress || 0}%`
+                        }}
                       />
-                    </Box>
-                    <Typography variant="caption" color="text.secondary">
-                      {syllabus.size}
-                    </Typography>
-                  </Box>
+                    </div>
+                  </div>
+                )}
 
-                  {/* Title */}
-                  <Typography variant="h6" gutterBottom>
-                    {syllabus.name}
-                  </Typography>
-                  
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {syllabus.description}
-                  </Typography>
+                {/* Metadata */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
+                  <div><strong>Subject:</strong> {syllabus.subject}</div>
+                  <div><strong>Difficulty:</strong> {syllabus.difficulty}</div>
+                  <div><strong>Chapters:</strong> {syllabus.chapters}</div>
+                  <div><strong>Topics:</strong> {syllabus.topics}</div>
+                </div>
 
-                  {/* Progress Bar for Processing */}
-                  {syllabus.status === 'processing' && (
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        Processing... {syllabus.progress}%
-                      </Typography>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={syllabus.progress} 
-                        sx={{ mt: 0.5 }}
-                      />
-                    </Box>
+                {/* Questions Generated */}
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                    Questions Generated: {syllabus.questionsGenerated || 0}
+                  </div>
+                  {(syllabus.questionsGenerated || 0) > 0 && (
+                    <div style={{
+                      width: '100%',
+                      height: '4px',
+                      backgroundColor: '#e2e8f0',
+                      borderRadius: '2px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${Math.min((syllabus.questionsGenerated / 100) * 100, 100)}%`,
+                        height: '100%',
+                        backgroundColor: '#4caf50'
+                      }} />
+                    </div>
                   )}
+                </div>
 
-                  {/* Metadata */}
-                  <Grid container spacing={2} sx={{ mb: 2 }}>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        Subject
-                      </Typography>
-                      <Typography variant="body2">
-                        {syllabus.subject}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        Difficulty
-                      </Typography>
-                      <Typography variant="body2">
-                        {syllabus.difficulty}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        Chapters
-                      </Typography>
-                      <Typography variant="body2">
-                        {syllabus.chapters}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        Topics
-                      </Typography>
-                      <Typography variant="body2">
-                        {syllabus.topics}
-                      </Typography>
-                    </Grid>
-                  </Grid>
+                {/* Actions */}
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#e2e8f0',
+                      color: '#2d3748',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem'
+                    }}
+                    onClick={() => {
+                      setSelectedSyllabus(syllabus)
+                      setShowDetails(true)
+                    }}
+                  >
+                    👁️ View
+                  </button>
 
-                  {/* AI Analysis */}
-                  {syllabus.aiAnalysis && (
-                    <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1, mb: 2 }}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        AI Analysis
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Confidence: {syllabus.aiAnalysis.confidence}% • 
-                        Est. Questions: {syllabus.aiAnalysis.estimatedQuestions}
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {/* Questions Generated */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Questions Generated: {syllabus.questionsGenerated}
-                    </Typography>
-                    {syllabus.questionsGenerated > 0 && (
-                      <CheckCircle color="success" fontSize="small" />
-                    )}
-                  </Box>
-                </CardContent>
-
-                <Divider />
-
-                <CardActions sx={{ justifyContent: 'space-between', p: 2 }}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <IconButton 
-                      size="small" 
-                      onClick={() => {
-                        setSelectedSyllabus(syllabus)
-                        setShowDetails(true)
-                      }}
-                    >
-                      <Visibility />
-                    </IconButton>
-                    <IconButton size="small">
-                      <Edit />
-                    </IconButton>
-                    <IconButton 
-                      size="small" 
-                      color="error"
-                      onClick={() => handleDeleteSyllabus(syllabus.id)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </Box>
+                  <button
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#f44336',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem'
+                    }}
+                    onClick={() => handleDeleteSyllabus(syllabus.id)}
+                  >
+                    🗑️ Delete
+                  </button>
 
                   {syllabus.status === 'processed' && (
-                    <Button
-                      size="small"
-                      variant="contained"
-                      startIcon={<AutoAwesome />}
+                    <button
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#2e7d32',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.75rem'
+                      }}
                       onClick={() => handleGenerateQuestions(syllabus.id)}
                       disabled={generatingQuestions}
                     >
-                      Generate Questions
-                    </Button>
+                      🤖 Generate Questions
+                    </button>
                   )}
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-      </Grid>
+                </div>
+              </div>
+            ))}
+          </div>
 
-      {/* Empty State */}
-      {syllabi.length === 0 && (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Description sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-          <Typography variant="h6" gutterBottom>
-            No syllabi uploaded yet
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Upload your first syllabus to start generating AI-powered questions
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<CloudUpload />}
-            onClick={() => setShowUpload(true)}
-          >
-            Upload Your First Syllabus
-          </Button>
-        </Paper>
-      )}
-
-      {/* Upload Dialog */}
-      <Dialog 
-        open={showUpload} 
-        onClose={() => setShowUpload(false)} 
-        maxWidth="lg" 
-        fullWidth
-      >
-        <DialogTitle>
-          Upload New Syllabus
-        </DialogTitle>
-        <DialogContent>
-          <SyllabusUpload onUploadSuccess={handleUploadSuccess} />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowUpload(false)}>
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Details Dialog */}
-      {selectedSyllabus && (
-        <Dialog 
-          open={showDetails} 
-          onClose={() => setShowDetails(false)} 
-          maxWidth="md" 
-          fullWidth
-        >
-          <DialogTitle>
-            Syllabus Details - {selectedSyllabus.name}
-          </DialogTitle>
-          <DialogContent>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Basic Information
-                </Typography>
-                <List dense>
-                  <ListItem>
-                    <ListItemText 
-                      primary="File Name" 
-                      secondary={selectedSyllabus.fileName} 
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText 
-                      primary="Upload Date" 
-                      secondary={new Date(selectedSyllabus.uploadDate).toLocaleDateString()} 
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText 
-                      primary="Subject" 
-                      secondary={selectedSyllabus.subject} 
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText 
-                      primary="Difficulty Level" 
-                      secondary={selectedSyllabus.difficulty} 
-                    />
-                  </ListItem>
-                </List>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Content Analysis
-                </Typography>
-                <List dense>
-                  <ListItem>
-                    <ListItemText 
-                      primary="Total Chapters" 
-                      secondary={selectedSyllabus.chapters} 
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText 
-                      primary="Total Topics" 
-                      secondary={selectedSyllabus.topics} 
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText 
-                      primary="Questions Generated" 
-                      secondary={selectedSyllabus.questionsGenerated} 
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText 
-                      primary="Status" 
-                      secondary={
-                        <Chip 
-                          label={selectedSyllabus.status}
-                          color={getStatusColor(selectedSyllabus.status)}
-                          size="small"
-                        />
-                      } 
-                    />
-                  </ListItem>
-                </List>
-              </Grid>
-
-              {selectedSyllabus.aiAnalysis && (
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    AI Analysis Report
-                  </Typography>
-                  <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
-                    <Typography variant="body2" gutterBottom>
-                      <strong>Analysis Confidence:</strong> {selectedSyllabus.aiAnalysis.confidence}%
-                    </Typography>
-                    <Typography variant="body2" gutterBottom>
-                      <strong>Key Topics Identified:</strong>
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-                      {selectedSyllabus.aiAnalysis.keyTopics.map((topic, index) => (
-                        <Chip key={index} label={topic} size="small" variant="outlined" />
-                      ))}
-                    </Box>
-                    <Typography variant="body2" gutterBottom>
-                      <strong>Estimated Questions:</strong> {selectedSyllabus.aiAnalysis.estimatedQuestions}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Difficulty Distribution:</strong> 
-                      Easy: {selectedSyllabus.aiAnalysis.difficultyDistribution.easy}% | 
-                      Medium: {selectedSyllabus.aiAnalysis.difficultyDistribution.medium}% | 
-                      Hard: {selectedSyllabus.aiAnalysis.difficultyDistribution.hard}%
-                    </Typography>
-                  </Paper>
-                </Grid>
-              )}
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowDetails(false)}>
-              Close
-            </Button>
-            {selectedSyllabus.status === 'processed' && (
-              <Button
-                variant="contained"
-                startIcon={<AutoAwesome />}
-                onClick={() => {
-                  handleGenerateQuestions(selectedSyllabus.id)
-                  setShowDetails(false)
-                }}
+          {/* Empty State */}
+          {syllabi.length === 0 && !loading && (
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '3rem 2rem',
+              textAlign: 'center',
+              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📚</div>
+              <h3 style={{ color: '#2d3748', marginBottom: '1rem' }}>No syllabi uploaded yet</h3>
+              <p style={{ color: '#718096', marginBottom: '2rem' }}>
+                Upload your first syllabus to start generating AI-powered questions
+              </p>
+              <button
+                style={syllabusStyles.uploadButton}
+                onClick={() => setShowUpload(true)}
               >
-                Generate More Questions
-              </Button>
-            )}
-          </DialogActions>
-        </Dialog>
-      )}
-    </Box>
+                📤 Upload Your First Syllabus
+              </button>
+            </div>
+          )}
+
+          {/* Details Modal */}
+          {showDetails && selectedSyllabus && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '12px',
+                padding: '2rem',
+                maxWidth: '600px',
+                width: '90%',
+                maxHeight: '80vh',
+                overflow: 'auto'
+              }}>
+                <h2 style={{ marginBottom: '1rem' }}>Syllabus Details</h2>
+                <h3>{selectedSyllabus.name}</h3>
+                
+                <div style={{ marginBottom: '2rem' }}>
+                  <p><strong>File:</strong> {selectedSyllabus.fileName}</p>
+                  <p><strong>Upload Date:</strong> {new Date(selectedSyllabus.uploadDate).toLocaleDateString()}</p>
+                  <p><strong>Status:</strong> {selectedSyllabus.status}</p>
+                  <p><strong>Size:</strong> {selectedSyllabus.size}</p>
+                  <p><strong>Subject:</strong> {selectedSyllabus.subject}</p>
+                  <p><strong>Chapters:</strong> {selectedSyllabus.chapters}</p>
+                  <p><strong>Topics:</strong> {selectedSyllabus.topics}</p>
+                  <p><strong>Questions Generated:</strong> {selectedSyllabus.questionsGenerated}</p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button
+                    style={syllabusStyles.backButton}
+                    onClick={() => setShowDetails(false)}
+                  >
+                    Close
+                  </button>
+                  {selectedSyllabus.status === 'processed' && (
+                    <button
+                      style={{ ...syllabusStyles.uploadButton, margin: 0 }}
+                      onClick={() => {
+                        handleGenerateQuestions(selectedSyllabus.id)
+                        setShowDetails(false)
+                      }}
+                    >
+                      Generate More Questions
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   )
 }
 

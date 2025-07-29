@@ -267,11 +267,11 @@ const Login = () => {
           </button>
 
           <div style={loginStyles.header}>
-            <div style={loginStyles.logo}>🧠</div>
+            <div style={loginStyles.logo}></div>
             <h1 style={loginStyles.title}>Welcome Back!</h1>
             <p style={loginStyles.subtitle}>Sign in to NeuroLearn</p>
             <div style={loginStyles.userTypeBadge}>
-              {formData.userType === 'student' ? '👨‍🎓 Student' : '👨‍🏫 Teacher'} Login
+              {formData.userType === 'student' ? 'Student' : 'Teacher'} Login
             </div>
           </div>
 
@@ -363,7 +363,7 @@ const Login = () => {
                 </>
               ) : (
                 <>
-                  🔑 Sign In to {formData.userType === 'student' ? 'Student' : 'Teacher'} Dashboard
+                  Sign In to {formData.userType === 'student' ? 'Student' : 'Teacher'} Dashboard
                 </>
               )}
             </button>

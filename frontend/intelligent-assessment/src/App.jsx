@@ -17,8 +17,17 @@ import { configureStore } from '@reduxjs/toolkit'
 const Home = React.lazy(() => import('./pages/Home'))
 const Login = React.lazy(() => import('./pages/auth/Login'))
 const Register = React.lazy(() => import('./pages/auth/Register'))
+
+// Student Dashboard and Components
 const StudentDashboard = React.lazy(() => import('./pages/student/studentdashboard'))
+const TakeQuiz = React.lazy(() => import('./pages/student/TakeQuiz'))
+const ViewResults = React.lazy(() => import('./pages/student/ViewResults'))
+
+// Teacher Dashboard and Components  
 const TeacherDashboard = React.lazy(() => import('./pages/teacher/teacherDashboard'))
+const ViewStudents = React.lazy(() => import('./pages/teacher/ViewStudents'))
+const ManageQuestions = React.lazy(() => import('./pages/teacher/ManageQuestions'))
+const ManageSyllabus = React.lazy(() => import('./pages/teacher/ManageSyllabus'))
 
 // Basic error fallback
 const ErrorFallback = ({ error, resetErrorBoundary }) => (
@@ -144,8 +153,8 @@ const store = configureStore({
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
       retry: (failureCount, error) => {
         if (error?.response?.status >= 400 && error?.response?.status < 500) {
           return false
@@ -191,7 +200,7 @@ const AppRouter = () => (
       } 
     />
     
-    {/* Dashboard Routes */}
+    {/* Student Dashboard Routes */}
     <Route 
       path="/pages/student/studentdashboard" 
       element={
@@ -202,10 +211,74 @@ const AppRouter = () => (
     />
     
     <Route 
+      path="/pages/student/takequiz" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Quiz..." />}>
+          <TakeQuiz />
+        </Suspense>
+      } 
+    />
+    
+    <Route 
+      path="/pages/student/takequiz/:quizId" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Quiz..." />}>
+          <TakeQuiz />
+        </Suspense>
+      } 
+    />
+    
+    <Route 
+      path="/pages/student/results" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Results..." />}>
+          <ViewResults />
+        </Suspense>
+      } 
+    />
+    
+    <Route 
+      path="/pages/student/results/:quizId" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Results..." />}>
+          <ViewResults />
+        </Suspense>
+      } 
+    />
+    
+    {/* Teacher Dashboard Routes */}
+    <Route 
       path="/pages/teacher/teacherDashboard" 
       element={
         <Suspense fallback={<LoadingSpinner text="Loading Teacher Dashboard..." />}>
           <TeacherDashboard />
+        </Suspense>
+      } 
+    />
+    
+    <Route 
+      path="/pages/teacher/viewstudents" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Student Management..." />}>
+          <ViewStudents />
+        </Suspense>
+      } 
+    />
+    
+    <Route 
+      path="/pages/teacher/managequestions" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Question Management..." />}>
+          <ManageQuestions />
+        </Suspense>
+      } 
+    />
+    
+    <Route 
+      path="/pages/teacher/managesyllabus" 
+      element={
+        <Suspense fallback={<LoadingSpinner text="Loading Syllabus Management..." />}>
+          <ManageSyllabus />
         </Suspense>
       } 
     />

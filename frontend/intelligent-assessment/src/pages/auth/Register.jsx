@@ -319,11 +319,11 @@ const Register = () => {
           </button>
 
           <div style={registerStyles.header}>
-            <div style={registerStyles.logo}>🧠</div>
+            <div style={registerStyles.logo}></div>
             <h1 style={registerStyles.title}>Join NeuroLearn!</h1>
             <p style={registerStyles.subtitle}>Create your account</p>
             <div style={registerStyles.userTypeBadge}>
-              {formData.userType === 'student' ? '👨‍🎓 Student' : '👨‍🏫 Teacher'} Registration
+              {formData.userType === 'student' ? 'Student' : 'Teacher'} Registration
             </div>
           </div>
 
@@ -547,7 +547,7 @@ const Register = () => {
                 </>
               ) : (
                 <>
-                  📝 Create {formData.userType === 'student' ? 'Student' : 'Teacher'} Account
+                  Create {formData.userType === 'student' ? 'Student' : 'Teacher'} Account
                 </>
               )}
             </button>

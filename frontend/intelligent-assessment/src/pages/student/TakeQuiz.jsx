@@ -1,484 +1,366 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Alert,
-  Card,
-  CardContent,
-  Grid,
-  Chip,
-  LinearProgress
-} from '@mui/material'
-import {
-  PlayArrow,
-  Timer,
-  Quiz,
-  Warning,
-  CheckCircle,
-  School
-} from '@mui/icons-material'
-
-import QuizInterface from '@components/student/QuizInterface'
-import { studentService } from '@services/student.service'
-import LoadingSpinner from '@components/common/LoadingSpinner'
-import { toast } from 'react-toastify'
+import { Helmet } from 'react-helmet-async'
+import { useNavigate, useParams } from 'react-router-dom'
 
 const TakeQuiz = () => {
-  const { quizId } = useParams()
   const navigate = useNavigate()
-  
-  const [quiz, setQuiz] = useState(null)
+  const { quizId } = useParams()
+  const [user, setUser] = useState(null)
+  const [availableQuizzes, setAvailableQuizzes] = useState([])
+  const [selectedQuiz, setSelectedQuiz] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [quizStarted, setQuizStarted] = useState(false)
-  const [showInstructions, setShowInstructions] = useState(false)
-  const [error, setError] = useState('')
 
   useEffect(() => {
-    if (quizId) {
-      fetchQuizDetails()
+    // Get user data from localStorage
+    const userData = localStorage.getItem('neurolearn-user')
+    if (userData) {
+      setUser(JSON.parse(userData))
+    } else {
+      navigate('/auth/login')
+      return
     }
-  }, [quizId])
 
-  const fetchQuizDetails = async () => {
-    try {
-      setLoading(true)
-      
-      // Mock quiz data for demonstration
-      const mockQuiz = {
-        id: parseInt(quizId),
-        title: 'Advanced Mathematics Quiz',
-        description: 'Test your knowledge of advanced mathematical concepts including calculus, algebra, and statistics.',
+    // Load available quizzes
+    loadAvailableQuizzes()
+  }, [navigate])
+
+  const loadAvailableQuizzes = () => {
+    // Mock data for available quizzes
+    const mockQuizzes = [
+      {
+        id: 1,
+        title: 'Mathematics - Algebra Basics',
         subject: 'Mathematics',
-        duration: 45, // minutes
-        totalQuestions: 20,
+        duration: 30,
+        questions: 15,
+        difficulty: 'Medium',
+        dueDate: '2024-02-15',
+        description: 'Test your understanding of algebraic expressions and equations.'
+      },
+      {
+        id: 2,
+        title: 'Physics - Motion and Forces',
+        subject: 'Physics',
+        duration: 45,
+        questions: 20,
         difficulty: 'Hard',
-        passingScore: 70,
-        maxAttempts: 2,
-        currentAttempt: 0,
-        instructions: [
-          'Read each question carefully before answering',
-          'You can navigate between questions using the Next/Previous buttons',
-          'Your answers are automatically saved as you progress',
-          'You can flag questions for review using the flag button',
-          'Submit the quiz before the time runs out',
-          'Once submitted, you cannot change your answers'
-        ],
-        topics: ['Differential Calculus', 'Integral Calculus', 'Linear Algebra', 'Statistics'],
-        timeLimit: 45 * 60, // seconds
-        questions: [
-          {
-            id: 1,
-            text: 'What is the derivative of x²?',
-            type: 'mcq',
-            difficulty: 'easy',
-            points: 2,
-            options: [
-              { id: 'a', text: '2x', isCorrect: true },
-              { id: 'b', text: 'x²', isCorrect: false },
-              { id: 'c', text: '2', isCorrect: false },
-              { id: 'd', text: 'x', isCorrect: false }
-            ],
-            hint: 'Remember the power rule: d/dx(xⁿ) = n·xⁿ⁻¹'
-          },
-          // Add more questions as needed
-        ],
-        previousAttempts: [
-          {
-            attemptNumber: 1,
-            score: 65,
-            completedAt: '2024-01-20',
-            timeSpent: 2580 // seconds
-          }
-        ],
-        dueDate: '2024-02-10',
-        teacherName: 'Dr. Rajesh Kumar',
-        createdAt: '2024-01-15'
+        dueDate: '2024-02-18',
+        description: 'Comprehensive quiz on mechanics and Newton\'s laws.'
+      },
+      {
+        id: 3,
+        title: 'Chemistry - Organic Compounds',
+        subject: 'Chemistry',
+        duration: 25,
+        questions: 12,
+        difficulty: 'Easy',
+        dueDate: '2024-02-20',
+        description: 'Basic concepts of organic chemistry and compounds.'
       }
-      
-      setQuiz(mockQuiz)
-    } catch (err) {
-      setError('Failed to load quiz details. Please try again.')
-      toast.error('Failed to load quiz')
-    } finally {
-      setLoading(false)
+    ]
+
+    setAvailableQuizzes(mockQuizzes)
+    
+    // If quizId is provided, select that quiz
+    if (quizId) {
+      const quiz = mockQuizzes.find(q => q.id === parseInt(quizId))
+      setSelectedQuiz(quiz)
     }
+    
+    setLoading(false)
   }
 
-  const handleStartQuiz = () => {
-    setShowInstructions(true)
+  const handleStartQuiz = (quiz) => {
+    setSelectedQuiz(quiz)
+    // You can implement the actual quiz interface here
+    console.log('Starting quiz:', quiz.title)
   }
 
-  const handleConfirmStart = () => {
-    setShowInstructions(false)
-    setQuizStarted(true)
-  }
-
-  const handleQuizComplete = (result) => {
-    // Navigate to results page with the quiz result
-    navigate(`/student/results/${quizId}`, { 
-      state: { 
-        result,
-        fromQuiz: true 
-      } 
-    })
+  const handleBackToDashboard = () => {
+    navigate('/pages/student/studentdashboard')
   }
 
   const getDifficultyColor = (difficulty) => {
-    switch (difficulty?.toLowerCase()) {
-      case 'easy': return 'success'
-      case 'medium': return 'warning'
-      case 'hard': return 'error'
-      default: return 'default'
+    switch (difficulty) {
+      case 'Easy': return '#4caf50'
+      case 'Medium': return '#ff9800'
+      case 'Hard': return '#f44336'
+      default: return '#757575'
     }
   }
 
-  const formatTime = (minutes) => {
-    if (minutes >= 60) {
-      const hours = Math.floor(minutes / 60)
-      const mins = minutes % 60
-      return `${hours}h ${mins}m`
+  const quizStyles = {
+    container: {
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      padding: '2rem'
+    },
+    header: {
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: '1.5rem 2rem',
+      marginBottom: '2rem',
+      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    },
+    title: {
+      fontSize: '1.8rem',
+      fontWeight: '700',
+      color: '#2d3748',
+      margin: 0
+    },
+    backButton: {
+      padding: '0.5rem 1rem',
+      backgroundColor: '#4299e1',
+      color: 'white',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontSize: '0.875rem',
+      fontWeight: '500'
+    },
+    content: {
+      maxWidth: '1000px',
+      margin: '0 auto'
+    },
+    quizzesGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+      gap: '1.5rem'
+    },
+    quizCard: {
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: '1.5rem',
+      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.08)',
+      transition: 'all 0.3s ease',
+      cursor: 'pointer'
+    },
+    quizTitle: {
+      fontSize: '1.2rem',
+      fontWeight: '600',
+      color: '#2d3748',
+      marginBottom: '0.5rem'
+    },
+    quizSubject: {
+      fontSize: '0.9rem',
+      color: '#4299e1',
+      fontWeight: '500',
+      marginBottom: '1rem'
+    },
+    quizDescription: {
+      fontSize: '0.9rem',
+      color: '#718096',
+      marginBottom: '1rem',
+      lineHeight: '1.4'
+    },
+    quizMeta: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '1rem',
+      fontSize: '0.85rem',
+      color: '#718096'
+    },
+    difficultyBadge: {
+      padding: '0.25rem 0.75rem',
+      borderRadius: '12px',
+      fontSize: '0.8rem',
+      fontWeight: '500',
+      color: 'white'
+    },
+    startButton: {
+      width: '100%',
+      padding: '0.75rem',
+      backgroundColor: '#48bb78',
+      color: 'white',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontSize: '0.9rem',
+      fontWeight: '500',
+      transition: 'background-color 0.3s ease'
+    },
+    selectedQuizContainer: {
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: '2rem',
+      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+      textAlign: 'center'
     }
-    return `${minutes}m`
   }
 
   if (loading) {
-    return <LoadingSpinner text="Loading quiz..." />
-  }
-
-  if (error) {
     return (
-      <Box sx={{ maxWidth: 800, mx: 'auto', p: 3, textAlign: 'center' }}>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-        <Button variant="contained" onClick={() => navigate('/student/dashboard')}>
-          Back to Dashboard
-        </Button>
-      </Box>
+      <div style={quizStyles.container}>
+        <div style={{ textAlign: 'center', color: 'white', paddingTop: '4rem' }}>
+          <h2>Loading Quizzes...</h2>
+        </div>
+      </div>
     )
   }
 
-  if (!quiz) {
-    return (
-      <Box sx={{ maxWidth: 800, mx: 'auto', p: 3, textAlign: 'center' }}>
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          Quiz not found or no longer available.
-        </Alert>
-        <Button variant="contained" onClick={() => navigate('/student/dashboard')}>
-          Back to Dashboard
-        </Button>
-      </Box>
-    )
-  }
-
-  // Show quiz interface if started
-  if (quizStarted) {
-    return (
-      <QuizInterface 
-        quizId={parseInt(quizId)} 
-        onQuizComplete={handleQuizComplete}
-      />
-    )
-  }
-
-  // Show pre-quiz information and start interface
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography variant="h4" gutterBottom>
-          {quiz.title}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {quiz.description}
-        </Typography>
-      </Box>
+    <>
+      <Helmet>
+        <title>Take Quiz - NeuroLearn | {user?.name}</title>
+        <meta name="description" content="Take your assigned quizzes and test your knowledge with NeuroLearn's intelligent assessment system." />
+      </Helmet>
 
-      <Grid container spacing={4}>
-        {/* Quiz Information */}
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 4 }}>
-            <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Quiz color="primary" />
-              Quiz Information
-            </Typography>
+      <div style={quizStyles.container}>
+        {/* Header */}
+        <div style={quizStyles.header}>
+          <h1 style={quizStyles.title}>
+            {selectedQuiz ? `Quiz: ${selectedQuiz.title}` : 'Available Quizzes'}
+          </h1>
+          <button style={quizStyles.backButton} onClick={handleBackToDashboard}>
+            ← Back to Dashboard
+          </button>
+        </div>
 
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Subject
-                  </Typography>
-                  <Typography variant="body1">
-                    {quiz.subject}
-                  </Typography>
-                </Box>
-              </Grid>
+        <div style={quizStyles.content}>
+          {!selectedQuiz ? (
+            // Show available quizzes
+            <>
+              <div style={{ 
+                backgroundColor: 'white', 
+                borderRadius: '8px', 
+                padding: '1rem', 
+                marginBottom: '2rem',
+                textAlign: 'center'
+              }}>
+                <p style={{ color: '#718096', margin: 0 }}>
+                  Welcome {user?.name}! Here are your available quizzes. Click on any quiz to start.
+                </p>
+              </div>
 
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Teacher
-                  </Typography>
-                  <Typography variant="body1">
-                    {quiz.teacherName}
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Duration
-                  </Typography>
-                  <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Timer fontSize="small" />
-                    {formatTime(quiz.duration)}
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Questions
-                  </Typography>
-                  <Typography variant="body1">
-                    {quiz.totalQuestions} questions
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Difficulty
-                  </Typography>
-                  <Chip 
-                    label={quiz.difficulty}
-                    color={getDifficultyColor(quiz.difficulty)}
-                    size="small"
-                  />
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Passing Score
-                  </Typography>
-                  <Typography variant="body1">
-                    {quiz.passingScore}%
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Attempts
-                  </Typography>
-                  <Typography variant="body1">
-                    {quiz.currentAttempt}/{quiz.maxAttempts}
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Due Date
-                  </Typography>
-                  <Typography variant="body1">
-                    {new Date(quiz.dueDate).toLocaleDateString()}
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-
-            {/* Topics Covered */}
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Topics Covered
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {quiz.topics.map((topic, index) => (
-                  <Chip
-                    key={index}
-                    label={topic}
-                    variant="outlined"
-                    size="small"
-                  />
+              <div style={quizStyles.quizzesGrid}>
+                {availableQuizzes.map((quiz) => (
+                  <div 
+                    key={quiz.id} 
+                    style={quizStyles.quizCard}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-5px)'
+                      e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)'
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.08)'
+                    }}
+                  >
+                    <div style={quizStyles.quizTitle}>{quiz.title}</div>
+                    <div style={quizStyles.quizSubject}>{quiz.subject}</div>
+                    <div style={quizStyles.quizDescription}>{quiz.description}</div>
+                    
+                    <div style={quizStyles.quizMeta}>
+                      <span>⏱️ {quiz.duration} min</span>
+                      <span>📝 {quiz.questions} questions</span>
+                      <span 
+                        style={{
+                          ...quizStyles.difficultyBadge,
+                          backgroundColor: getDifficultyColor(quiz.difficulty)
+                        }}
+                      >
+                        {quiz.difficulty}
+                      </span>
+                    </div>
+                    
+                    <div style={{ fontSize: '0.85rem', color: '#e53e3e', marginBottom: '1rem' }}>
+                      📅 Due: {new Date(quiz.dueDate).toLocaleDateString()}
+                    </div>
+                    
+                    <button 
+                      style={quizStyles.startButton}
+                      onClick={() => handleStartQuiz(quiz)}
+                      onMouseOver={(e) => e.target.style.backgroundColor = '#38a169'}
+                      onMouseOut={(e) => e.target.style.backgroundColor = '#48bb78'}
+                    >
+                      Start Quiz
+                    </button>
+                  </div>
                 ))}
-              </Box>
-            </Box>
-
-            {/* Previous Attempts */}
-            {quiz.previousAttempts && quiz.previousAttempts.length > 0 && (
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Previous Attempts
-                </Typography>
-                {quiz.previousAttempts.map((attempt, index) => (
-                  <Card key={index} variant="outlined" sx={{ mb: 2 }}>
-                    <CardContent sx={{ py: 2 }}>
-                      <Grid container spacing={2} alignItems="center">
-                        <Grid item xs={3}>
-                          <Typography variant="body2">
-                            Attempt {attempt.attemptNumber}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={3}>
-                          <Typography variant="body2" color={attempt.score >= quiz.passingScore ? 'success.main' : 'error.main'}>
-                            Score: {attempt.score}%
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={3}>
-                          <Typography variant="body2" color="text.secondary">
-                            {formatTime(Math.floor(attempt.timeSpent / 60))}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={3}>
-                          <Typography variant="caption" color="text.secondary">
-                            {new Date(attempt.completedAt).toLocaleDateString()}
-                          </Typography>
-                        </Grid>
-                      </Grid>
-                    </CardContent>
-                  </Card>
-                ))}
-              </Box>
-            )}
-
-            {/* Start Quiz Button */}
-            <Box sx={{ textAlign: 'center' }}>
-              {quiz.currentAttempt < quiz.maxAttempts ? (
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<PlayArrow />}
-                  onClick={handleStartQuiz}
-                  sx={{ minWidth: 200 }}
+              </div>
+            </>
+          ) : (
+            // Show selected quiz start screen
+            <div style={quizStyles.selectedQuizContainer}>
+              <h2 style={{ color: '#2d3748', marginBottom: '1rem' }}>
+                Ready to start: {selectedQuiz.title}?
+              </h2>
+              <p style={{ color: '#718096', marginBottom: '2rem' }}>
+                {selectedQuiz.description}
+              </p>
+              
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                gap: '1rem',
+                marginBottom: '2rem'
+              }}>
+                <div style={{ padding: '1rem', backgroundColor: '#f7fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d3748' }}>
+                    {selectedQuiz.duration}
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#718096' }}>Minutes</div>
+                </div>
+                <div style={{ padding: '1rem', backgroundColor: '#f7fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d3748' }}>
+                    {selectedQuiz.questions}
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#718096' }}>Questions</div>
+                </div>
+                <div style={{ padding: '1rem', backgroundColor: '#f7fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '600', color: getDifficultyColor(selectedQuiz.difficulty) }}>
+                    {selectedQuiz.difficulty}
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#718096' }}>Difficulty</div>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                <button 
+                  style={{
+                    padding: '0.75rem 2rem',
+                    backgroundColor: '#e2e8f0',
+                    color: '#2d3748',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '500'
+                  }}
+                  onClick={() => setSelectedQuiz(null)}
                 >
-                  {quiz.currentAttempt > 0 ? 'Retake Quiz' : 'Start Quiz'}
-                </Button>
-              ) : (
-                <Alert severity="warning">
-                  You have used all your attempts for this quiz.
-                </Alert>
-              )}
-            </Box>
-          </Paper>
-        </Grid>
-
-        {/* Instructions Sidebar */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, position: 'sticky', top: 100 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <School color="primary" />
-              Instructions
-            </Typography>
-
-            <Alert severity="info" sx={{ mb: 3 }}>
-              <Typography variant="body2">
-                <strong>Important:</strong> Once you start the quiz, the timer will begin and cannot be paused.
-              </Typography>
-            </Alert>
-
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Before you begin:
-              </Typography>
-              <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
-                {quiz.instructions.map((instruction, index) => (
-                  <li key={index} style={{ marginBottom: '0.5rem' }}>
-                    <Typography variant="body2">
-                      {instruction}
-                    </Typography>
-                  </li>
-                ))}
-              </ul>
-            </Box>
-
-            <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Quick Stats:
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                📝 {quiz.totalQuestions} questions
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                ⏱️ {formatTime(quiz.duration)} time limit
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                🎯 {quiz.passingScore}% to pass
-              </Typography>
-              <Typography variant="body2">
-                🔄 {quiz.maxAttempts - quiz.currentAttempt} attempts remaining
-              </Typography>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Instructions Dialog */}
-      <Dialog 
-        open={showInstructions} 
-        onClose={() => setShowInstructions(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Warning color="warning" />
-            Ready to Start?
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Alert severity="warning" sx={{ mb: 3 }}>
-            <Typography variant="body2">
-              <strong>Once you click "Start Quiz", the timer will begin immediately and cannot be stopped.</strong>
-            </Typography>
-          </Alert>
-
-          <Typography variant="body1" gutterBottom>
-            Please confirm that you:
-          </Typography>
-          <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
-            <li>Have a stable internet connection</li>
-            <li>Are in a quiet environment</li>
-            <li>Have read all the instructions</li>
-            <li>Are ready to complete the quiz in one sitting</li>
-          </ul>
-
-          <Box sx={{ mt: 3, p: 2, bgcolor: 'info.50', borderRadius: 1 }}>
-            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Timer fontSize="small" />
-              <strong>Time Limit: {formatTime(quiz.duration)}</strong>
-            </Typography>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowInstructions(false)}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleConfirmStart} 
-            variant="contained"
-            startIcon={<PlayArrow />}
-          >
-            Start Quiz Now
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+                  Back to Quizzes
+                </button>
+                <button 
+                  style={{
+                    padding: '0.75rem 2rem',
+                    backgroundColor: '#48bb78',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '500'
+                  }}
+                  onClick={() => {
+                    // This is where you would implement the actual quiz interface
+                    console.log('Starting quiz interface for:', selectedQuiz.title)
+                    alert(`Starting ${selectedQuiz.title}! (Quiz interface would load here)`)
+                  }}
+                >
+                  Begin Quiz
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   )
 }
 

@@ -81,7 +81,7 @@ const Home = () => {
     logo: {
       fontSize: '4rem',
       marginBottom: '1rem',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(125deg, #920606 30%, #02060b 70%)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       backgroundClip: 'text'
@@ -101,33 +101,6 @@ const Home = () => {
       color: '#718096',
       marginBottom: '2rem',
       fontWeight: '400'
-    },
-    location: {
-      fontSize: '1rem',
-      color: '#e53e3e',
-      marginBottom: '2rem',
-      fontWeight: '500',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '0.5rem'
-    },
-    timeSection: {
-      backgroundColor: '#f7fafc',
-      padding: '1.5rem',
-      borderRadius: '12px',
-      marginBottom: '2rem',
-      border: '1px solid #e2e8f0'
-    },
-    time: {
-      fontSize: '1.5rem',
-      fontWeight: '600',
-      color: '#2d3748',
-      marginBottom: '0.5rem'
-    },
-    date: {
-      fontSize: '1rem',
-      color: '#718096'
     },
     sectionTitle: {
       fontSize: '1.3rem',
@@ -285,28 +258,13 @@ const Home = () => {
           {/* Indian flag colors top border */}
           <div style={homeStyles.cardBefore}></div>
           
-          <div style={homeStyles.logo}>🧠</div>
+          <div style={homeStyles.logo}></div>
           
           <h1 style={homeStyles.title}>NeuroLearn</h1>
           <p style={homeStyles.subtitle}>
             Intelligent Assessment Platform
           </p>
           
-          <div style={homeStyles.location}>
-            <span>📍</span>
-            <span>Chennai, Tamil Nadu, India</span>
-          </div>
-
-          {/* Current Time Display */}
-          <div style={homeStyles.timeSection}>
-            <div style={homeStyles.time}>
-              {formatTime(currentTime)}
-            </div>
-            <div style={homeStyles.date}>
-              {formatDate(currentTime)}
-            </div>
-          </div>
-
           {/* User Type Selection */}
           <div style={homeStyles.userTypeSection}>
             <div style={homeStyles.sectionTitle}>Choose Your Role</div>
@@ -320,7 +278,7 @@ const Home = () => {
                 }}
                 onClick={() => handleUserTypeSelect('student')}
               >
-                👨‍🎓 I'm a Student
+                 I'm a Student
               </button>
               <button
                 style={{
@@ -331,7 +289,7 @@ const Home = () => {
                 }}
                 onClick={() => handleUserTypeSelect('teacher')}
               >
-                👨‍🏫 I'm a Teacher
+                 I'm a Teacher
               </button>
             </div>
             {!selectedUserType && (
@@ -372,7 +330,7 @@ const Home = () => {
                   }
                 }}
               >
-                🔑 Login
+                 Login
               </button>
               
               <div style={homeStyles.orDivider}>
@@ -404,7 +362,7 @@ const Home = () => {
                   }
                 }}
               >
-                📝 Register
+                 Register
               </button>
             </div>
             
@@ -418,35 +376,9 @@ const Home = () => {
             )}
           </div>
 
-          {/* Features Grid */}
-          <div style={homeStyles.features}>
-            <div style={homeStyles.feature}>
-              <div style={homeStyles.featureIcon}>🤖</div>
-              <div style={homeStyles.featureTitle}>AI-Powered</div>
-              <div style={homeStyles.featureDesc}>Smart question generation</div>
-            </div>
-            <div style={homeStyles.feature}>
-              <div style={homeStyles.featureIcon}>📱</div>
-              <div style={homeStyles.featureTitle}>Mobile Ready</div>
-              <div style={homeStyles.featureDesc}>Works on all devices</div>
-            </div>
-            <div style={homeStyles.feature}>
-              <div style={homeStyles.featureIcon}>🇮🇳</div>
-              <div style={homeStyles.featureTitle}>Made for India</div>
-              <div style={homeStyles.featureDesc}>CBSE & State boards</div>
-            </div>
-            <div style={homeStyles.feature}>
-              <div style={homeStyles.featureIcon}>⚡</div>
-              <div style={homeStyles.featureTitle}>Fast & Offline</div>
-              <div style={homeStyles.featureDesc}>Works without internet</div>
-            </div>
-          </div>
+          
 
-          {/* Footer */}
-          <div style={homeStyles.footer}>
-            <p>🎓 Empowering Chennai's Educational Excellence</p>
-            <p>Built with ❤️ for Indian Students & Teachers</p>
-          </div>
+          
         </div>
       </div>
     </>

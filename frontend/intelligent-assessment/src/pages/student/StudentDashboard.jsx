@@ -31,6 +31,35 @@ const StudentDashboard = () => {
     navigate('/', { replace: true })
   }
 
+  // Navigation handlers
+  const handleTakeQuiz = () => {
+    navigate('/pages/student/takequiz')
+  }
+
+  const handleViewResults = () => {
+    navigate('/pages/student/results')
+  }
+
+  const handleViewProgress = () => {
+    // You can add progress page later
+    console.log('Navigate to progress page')
+  }
+
+  const handleViewAchievements = () => {
+    // You can add achievements page later
+    console.log('Navigate to achievements page')
+  }
+
+  const handlePracticeMode = () => {
+    // You can add practice mode later
+    console.log('Navigate to practice mode')
+  }
+
+  const handleSettings = () => {
+    // You can add settings page later
+    console.log('Navigate to settings')
+  }
+
   // Format time for Chennai (IST)
   const formatTime = (date) => {
     return date.toLocaleString('en-IN', {
@@ -41,10 +70,20 @@ const StudentDashboard = () => {
     })
   }
 
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
   const dashboardStyles = {
     container: {
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #7c3aed 25%, #4f46e5 75%)',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
     },
     header: {
@@ -218,6 +257,7 @@ const StudentDashboard = () => {
         {/* Header */}
         <header style={dashboardStyles.header}>
           <div style={dashboardStyles.logo}>
+            <span></span>
             <span>NeuroLearn</span>
           </div>
           
@@ -242,75 +282,24 @@ const StudentDashboard = () => {
             <h1 style={dashboardStyles.welcomeTitle}>
               Welcome back, {user.name}! 🎓
             </h1>
-            <p style={dashboardStyles.welcomeSubtitle}>
-              Ready to continue your learning journey at {user.institution}?
-            </p>
-            
-            <div style={{ 
-              backgroundColor: '#e3f2fd', 
-              padding: '1rem', 
-              borderRadius: '8px',
-              color: '#1976d2',
-              fontWeight: '500'
-            }}>
-              📚 Grade: {user.grade} • 🏫 {user.institution}
-            </div>
           </div>
 
           {/* Stats Grid */}
           <div style={dashboardStyles.statsGrid}>
-            <div 
-              style={dashboardStyles.statCard}
-              onMouseOver={(e) => e.target.style.transform = 'translateY(-5px)'}
-              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-            >
-              <div style={dashboardStyles.statIcon}>📊</div>
-              <div style={dashboardStyles.statNumber}>8</div>
-              <div style={dashboardStyles.statLabel}>Quizzes Completed</div>
-            </div>
-            
-            <div 
-              style={dashboardStyles.statCard}
-              onMouseOver={(e) => e.target.style.transform = 'translateY(-5px)'}
-              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-            >
-              <div style={dashboardStyles.statIcon}>🎯</div>
-              <div style={dashboardStyles.statNumber}>85%</div>
-              <div style={dashboardStyles.statLabel}>Average Score</div>
-            </div>
-            
-            <div 
-              style={dashboardStyles.statCard}
-              onMouseOver={(e) => e.target.style.transform = 'translateY(-5px)'}
-              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-            >
-              <div style={dashboardStyles.statIcon}>⭐</div>
-              <div style={dashboardStyles.statNumber}>12</div>
-              <div style={dashboardStyles.statLabel}>Achievements</div>
-            </div>
-            
-            <div 
-              style={dashboardStyles.statCard}
-              onMouseOver={(e) => e.target.style.transform = 'translateY(-5px)'}
-              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-            >
-              <div style={dashboardStyles.statIcon}>🔥</div>
-              <div style={dashboardStyles.statNumber}>7</div>
-              <div style={dashboardStyles.statLabel}>Day Streak</div>
-            </div>
           </div>
 
           {/* Action Buttons */}
           <div style={dashboardStyles.actionsGrid}>
             <button 
               style={dashboardStyles.actionButton}
+              onClick={handleTakeQuiz}
               onMouseOver={(e) => {
-                e.target.style.transform = 'translateY(-3px)'
-                e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)'
+                e.currentTarget.style.transform = 'translateY(-3px)'
+                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)'
               }}
               onMouseOut={(e) => {
-                e.target.style.transform = 'translateY(0)'
-                e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.08)'
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.08)'
               }}
             >
               <div style={dashboardStyles.actionIcon}>📝</div>
@@ -320,66 +309,19 @@ const StudentDashboard = () => {
             
             <button 
               style={dashboardStyles.actionButton}
+              onClick={handleViewResults}
               onMouseOver={(e) => {
-                e.target.style.transform = 'translateY(-3px)'
-                e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)'
+                e.currentTarget.style.transform = 'translateY(-3px)'
+                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)'
               }}
               onMouseOut={(e) => {
-                e.target.style.transform = 'translateY(0)'
-                e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.08)'
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.08)'
               }}
             >
-              <div style={dashboardStyles.actionIcon}>📈</div>
-              <div style={dashboardStyles.actionTitle}>View Progress</div>
-              <div style={dashboardStyles.actionDesc}>Track your performance</div>
-            </button>
-            
-            <button 
-              style={dashboardStyles.actionButton}
-              onMouseOver={(e) => {
-                e.target.style.transform = 'translateY(-3px)'
-                e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)'
-              }}
-              onMouseOut={(e) => {
-                e.target.style.transform = 'translateY(0)'
-                e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.08)'
-              }}
-            >
-              <div style={dashboardStyles.actionIcon}>🏆</div>
-              <div style={dashboardStyles.actionTitle}>Achievements</div>
-              <div style={dashboardStyles.actionDesc}>View your badges</div>
-            </button>
-            
-            <button 
-              style={dashboardStyles.actionButton}
-              onMouseOver={(e) => {
-                e.target.style.transform = 'translateY(-3px)'
-                e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)'
-              }}
-              onMouseOut={(e) => {
-                e.target.style.transform = 'translateY(0)'
-                e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.08)'
-              }}
-            >
-              <div style={dashboardStyles.actionIcon}>💡</div>
-              <div style={dashboardStyles.actionTitle}>Practice Mode</div>
-              <div style={dashboardStyles.actionDesc}>Improve your skills</div>
-            </button>
-            
-            <button 
-              style={dashboardStyles.actionButton}
-              onMouseOver={(e) => {
-                e.target.style.transform = 'translateY(-3px)'
-                e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)'
-              }}
-              onMouseOut={(e) => {
-                e.target.style.transform = 'translateY(0)'
-                e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.08)'
-              }}
-            >
-              <div style={dashboardStyles.actionIcon}>⚙️</div>
-              <div style={dashboardStyles.actionTitle}>Settings</div>
-              <div style={dashboardStyles.actionDesc}>Customize your experience</div>
+              <div style={dashboardStyles.actionIcon}>📊</div>
+              <div style={dashboardStyles.actionTitle}>View Results</div>
+              <div style={dashboardStyles.actionDesc}>Check your quiz results</div>
             </button>
           </div>
         </main>

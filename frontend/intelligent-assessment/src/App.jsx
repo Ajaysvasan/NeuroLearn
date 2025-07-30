@@ -19,7 +19,7 @@ const Login = React.lazy(() => import('./pages/auth/Login'))
 const Register = React.lazy(() => import('./pages/auth/Register'))
 
 // Student Dashboard and Components
-const StudentDashboard = React.lazy(() => import('./pages/student/studentdashboard'))
+const StudentDashboard = React.lazy(() => import('./pages/student/StudentDashboard'))
 const TakeQuiz = React.lazy(() => import('./pages/student/TakeQuiz'))
 const ViewResults = React.lazy(() => import('./pages/student/ViewResults'))
 

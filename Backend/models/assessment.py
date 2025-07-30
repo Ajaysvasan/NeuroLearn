@@ -96,7 +96,7 @@ class TestTimer:
             return remaining
 
 class PerformanceAnalyzer:
-    """Optimized performance analyzer with  negative marking"""
+    """Optimized performance analyzer with GATE-style negative marking"""
     
     # Class-level constants for better performance
     TOPIC_KEYWORDS = {
@@ -760,9 +760,9 @@ class PerformanceAnalyzer:
             
             # Determine grade and level
             if final_score >= 85:
-                grade, level = 'A+', 'Excellent'
+                grade, level = 'A+', 'Excellent - GATE Ready'
             elif final_score >= 75:
-                grade, level = 'A', 'Very Good '
+                grade, level = 'A', 'Very Good - Strong GATE Potential'
             elif final_score >= 65:
                 grade, level = 'B+', 'Good - Focused Improvement Needed'
             elif final_score >= 50:
@@ -772,6 +772,7 @@ class PerformanceAnalyzer:
             else:
                 grade, level = 'D', 'Poor - Fundamental Revision Required'
             
+            # GATE readiness assessment
             gate_readiness = self._assess_gate_readiness(final_score, marking_analysis, avg_time)
             
             return {
@@ -827,8 +828,8 @@ class PerformanceAnalyzer:
             }
             
         except Exception as e:
-            logger.error(f"assessment failed: {e}")
-            return {"error": "Failed to assess  readiness"}
+            logger.error(f"GATE readiness assessment failed: {e}")
+            return {"error": "Failed to assess GATE readiness"}
     
     def _identify_strengths(self, marking_analysis: Dict) -> List[str]:
         """Identify student strengths"""
@@ -879,7 +880,7 @@ class TestInterface:
         self.analyzer = PerformanceAnalyzer()
         self.start_time = None
         self.gemini_model = None
-        self.session_id = f"test_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self.session_id = f"gate_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     
     def setup_gemini(self) -> bool:
         """Setup Gemini AI with improved error handling"""
@@ -921,7 +922,7 @@ class TestInterface:
             print("="*80)
             
             question_text = question_data.get('question', 'Question text not available')
-            print(f"\n{question_text}")
+            print(f"\n📝 {question_text}")
             
             options = question_data.get('options', [])
             if options:
@@ -929,28 +930,28 @@ class TestInterface:
                 for option in options:
                     print(f"   {option}")
             else:
-                print("\n Options not available")
+                print("\n⚠️ Options not available")
             
             pdf_ref = question_data.get('pdf_reference', '')
             if pdf_ref:
-                print(f"\n Reference: {pdf_ref}")
+                print(f"\n📖 Reference: {pdf_ref}")
             
             print("\n" + "-"*80)
             
         except Exception as e:
             logger.error(f"Error displaying question: {e}")
-            print(f"\n Error displaying question {question_num}")
+            print(f"\n❌ Error displaying question {question_num}")
     
     def get_user_answer(self, timer: TestTimer) -> Optional[Tuple[str, float]]:
         """Get user answer with improved input validation and error handling"""
-        print(f" Time limit: {timer.duration//60} minute(s)")
+        print(f"⏰ Time limit: {timer.duration//60} minute(s)")
         print("Enter your answer (A/B/C/D) or 'skip' to skip: ", end='', flush=True)
         
         time_up_flag = [False]  # Use list for mutable reference
         
         def time_up():
             time_up_flag[0] = True
-            print(f"\n\n Time's up! Moving to next question...")
+            print(f"\n\n⏰ Time's up! Moving to next question...")
         
         timer.start(time_up)
         
@@ -964,40 +965,40 @@ class TestInterface:
             if answer in valid_answers:
                 return answer, elapsed_time
             else:
-                print(f" Invalid input '{answer}'. Marking as skipped.")
+                print(f"⚠️ Invalid input '{answer}'. Marking as skipped.")
                 return 'SKIP', elapsed_time
                 
         except KeyboardInterrupt:
             timer.stop()
-            print("\n\nTest interrupted by user.")
+            print("\n\n⚠️ Test interrupted by user.")
             return None, 0
         except EOFError:
             timer.stop()
-            print("\n\n Input stream ended. Marking as skipped.")
+            print("\n\n⚠️ Input stream ended. Marking as skipped.")
             return 'SKIP', timer.duration
         except Exception as e:
             timer.stop()
             logger.error(f"Error getting user input: {e}")
-            print(f"\n Input error. Marking as skipped.")
+            print(f"\n⚠️ Input error. Marking as skipped.")
             return 'SKIP', timer.duration
     
     def conduct_test(self, questions: List[Dict], time_per_question: int = 1) -> List[Dict]:
         """Conduct test with comprehensive error handling and progress tracking"""
         if not questions:
-            print(" No questions available for the test")
+            print("❌ No questions available for the test")
             return []
         
-        print(f"\n Starting Practice Test with Negative Marking")
-        print(f" Total Questions: {len(questions)}")
-        print(f" Time per question: {time_per_question} minute(s)")
-        print(f" Marking Scheme: +1 for correct, -1/3 for incorrect, 0 for skip")
-        print(f" Session ID: {self.session_id}")
+        print(f"\n🎯 Starting GATE Practice Test with Negative Marking")
+        print(f"📊 Total Questions: {len(questions)}")
+        print(f"⏰ Time per question: {time_per_question} minute(s)")
+        print(f"📝 Marking Scheme: +1 for correct, -1/3 for incorrect, 0 for skip")
+        print(f"🔄 Session ID: {self.session_id}")
         print(f"\nPress Enter to start...")
         
         try:
             input()
         except (KeyboardInterrupt, EOFError):
-            print("\nTest cancelled by user")
+            print("\n❌ Test cancelled by user")
             return []
         
         self.start_time = datetime.now()
@@ -1007,7 +1008,7 @@ class TestInterface:
             try:
                 # Progress indicator
                 progress = (i-1) / len(questions) * 100
-                print(f"\nProgress: {progress:.1f}% ({i-1}/{len(questions)} completed)")
+                print(f"\n📊 Progress: {progress:.1f}% ({i-1}/{len(questions)} completed)")
                 
                 self.display_question(question, i, len(questions))
                 
@@ -1015,7 +1016,7 @@ class TestInterface:
                 user_input = self.get_user_answer(timer)
                 
                 if user_input is None:  # User interrupted
-                    print("\nTest interrupted. Saving current progress...")
+                    print("\n⚠️ Test interrupted. Saving current progress...")
                     break
                 
                 user_answer, time_taken = user_input
@@ -1052,12 +1053,12 @@ class TestInterface:
                     try:
                         input()
                     except (KeyboardInterrupt, EOFError):
-                        print("\n Test ended by user")
+                        print("\n⚠️ Test ended by user")
                         break
                         
             except Exception as e:
                 logger.error(f"Error processing question {i}: {e}")
-                print(f"Error with question {i}. Skipping...")
+                print(f"⚠️ Error with question {i}. Skipping...")
                 continue
         
         print(f"\n🏁 Test completed! Processed {len(test_results)} questions.")
@@ -1067,15 +1068,15 @@ class TestInterface:
         """Show immediate feedback after each question"""
         try:
             if result['is_skipped']:
-                print(f"Question skipped")
-                print(f"Correct answer: {result['correct_answer']}")
+                print(f"⏭️ Question skipped")
+                print(f"✅ Correct answer: {result['correct_answer']}")
             elif result['is_correct']:
-                print(f"Correct! (+1 mark) | Time: {result['time_taken']:.1f}s")
+                print(f"✅ Correct! (+1 mark) | Time: {result['time_taken']:.1f}s")
             else:
-                print(f"Incorrect (-1/3 mark) | Correct: {result['correct_answer']} | Time: {result['time_taken']:.1f}s")
+                print(f"❌ Incorrect (-1/3 mark) | Correct: {result['correct_answer']} | Time: {result['time_taken']:.1f}s")
             
             if explanation and len(explanation.strip()) > 0:
-                print(f"Explanation: {explanation}")
+                print(f"💡 Explanation: {explanation}")
                 
         except Exception as e:
             logger.error(f"Error showing feedback: {e}")
@@ -1132,13 +1133,13 @@ Provide personalized, encouraging feedback in 150-200 words focusing on:
             
             # Performance assessment
             if score >= 75:
-                feedback_parts.append("Excellent performance! You're demonstrating strong  readiness.")
+                feedback_parts.append("🎉 Excellent performance! You're demonstrating strong GATE readiness.")
             elif score >= 60:
-                feedback_parts.append("Good performance! You're on the right track with focused improvement needed.")
+                feedback_parts.append("👍 Good performance! You're on the right track with focused improvement needed.")
             elif score >= 40:
-                feedback_parts.append("Decent foundation, but significant preparation required for success.")
+                feedback_parts.append("📚 Decent foundation, but significant preparation required for GATE success.")
             else:
-                feedback_parts.append("Keep practicing! Focus on fundamental concept building and strategic preparation.")
+                feedback_parts.append("🔄 Keep practicing! Focus on fundamental concept building and strategic preparation.")
             
             # Grade context
             feedback_parts.append(f"Your overall grade is {grade}.")
@@ -1158,7 +1159,7 @@ Provide personalized, encouraging feedback in 150-200 words focusing on:
             
         except Exception as e:
             logger.error(f"Basic feedback generation failed: {e}")
-            return "Test completed successfully. Continue practicing to improve your preparation."
+            return "Test completed successfully. Continue practicing to improve your GATE preparation."
     
     def generate_json_report(self, analysis: Dict, test_duration: str) -> Dict[str, Any]:
         """Generate comprehensive JSON report with error handling"""
@@ -1198,24 +1199,24 @@ Provide personalized, encouraging feedback in 150-200 words focusing on:
         """Display comprehensive summary with enhanced formatting"""
         try:
             if 'error' in json_report:
-                print(f"\nError in report: {json_report['error']}")
+                print(f"\n❌ Error in report: {json_report['error']}")
                 return
             
-            print(f"\nPRACTICE TEST - PERFORMANCE SUMMARY (Negative Marking)")
+            print(f"\n📊 GATE PRACTICE TEST - PERFORMANCE SUMMARY (Negative Marking)")
             print("="*80)
             
             # Session info
             metadata = json_report.get('report_metadata', {})
-            print(f"Session: {metadata.get('session_id', 'N/A')}")
-            print(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            print(f"Duration: {metadata.get('test_duration', 'N/A')}")
+            print(f"🔍 Session: {metadata.get('session_id', 'N/A')}")
+            print(f"📅 Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"⏱️ Duration: {metadata.get('test_duration', 'N/A')}")
             
             # Main performance metrics
             overall = json_report.get('overall_performance', {})
             grade = json_report.get('grade_assessment', {})
             marking = json_report.get('negative_marking_analysis', {}).get('marking_summary', {})
             
-            print(f"\n OVERALL PERFORMANCE")
+            print(f"\n🎯 OVERALL PERFORMANCE")
             print(f"Grade: {grade.get('letter_grade', 'N/A')} ({grade.get('performance_level', 'N/A')})")
             print(f"Final Score: {overall.get('score_percentage', 0)}% (with negative marking)")
             print(f"Raw Accuracy: {overall.get('accuracy_percentage', 0)}%")
@@ -1223,7 +1224,7 @@ Provide personalized, encouraging feedback in 150-200 words focusing on:
             print(f"Average Time: {overall.get('average_time_per_question_seconds', 0):.1f}s per question")
             
             # Negative marking analysis
-            print(f"\nNEGATIVE MARKING IMPACT")
+            print(f"\n💡 NEGATIVE MARKING IMPACT")
             print(f"Positive Marks: +{marking.get('positive_marks', 0):.2f}")
             print(f"Negative Marks: -{marking.get('negative_marks', 0):.2f}")
             print(f"Net Score Impact: {marking.get('net_score_impact', 0):.2f}")
@@ -1232,7 +1233,7 @@ Provide personalized, encouraging feedback in 150-200 words focusing on:
             strategy = json_report.get('strategy_analysis', {})
             if strategy.get('current_performance'):
                 current = strategy['current_performance']
-                print(f"\nSTRATEGY ANALYSIS")
+                print(f"\n🎯 STRATEGY ANALYSIS")
                 print(f"Current Strategy: {current.get('strategy_type', 'N/A').replace('_', ' ').title()}")
                 
                 alternatives = strategy.get('alternative_strategies', {})
@@ -1243,7 +1244,7 @@ Provide personalized, encouraging feedback in 150-200 words focusing on:
             # GATE readiness
             gate_readiness = grade.get('gate_readiness', {})
             if gate_readiness:
-                print(f"\nREADINESS ASSESSMENT")
+                print(f"\n🚀 GATE READINESS ASSESSMENT")
                 readiness_level = gate_readiness.get('readiness_level', 'unknown').replace('_', ' ').title()
                 print(f"Readiness Level: {readiness_level}")
                 print(f"Estimated Preparation Time: {gate_readiness.get('estimated_preparation_time', 'N/A')}")
@@ -1253,7 +1254,7 @@ Provide personalized, encouraging feedback in 150-200 words focusing on:
             problem_areas = json_report.get('problem_areas', {})
             weak_topics = problem_areas.get('weakest_topics', [])
             if weak_topics:
-                print(f"\nPRIORITY FOCUS AREAS")
+                print(f"\n🎯 PRIORITY FOCUS AREAS")
                 for i, topic in enumerate(weak_topics[:3], 1):
                     topic_name = topic.get('topic', 'Unknown').replace('_', ' ').title()
                     score = topic.get('score_percentage', 0)
@@ -1263,26 +1264,26 @@ Provide personalized, encouraging feedback in 150-200 words focusing on:
             # Recommendations
             recommendations = json_report.get('recommendations', {})
             next_level = recommendations.get('next_difficulty_level', 'medium')
-            print(f"\nNEXT STEPS")
+            print(f"\n🔄 NEXT STEPS")
             print(f"Recommended Difficulty: {next_level.upper()}")
             
             # Risk management advice
             risk_advice = recommendations.get('risk_management', [])
             if risk_advice:
-                print(f"\nRISK MANAGEMENT TIPS")
+                print(f"\n⚠️ RISK MANAGEMENT TIPS")
                 for tip in risk_advice[:2]:
                     print(f"• {tip}")
             
             # AI Feedback
             ai_feedback = json_report.get('ai_feedback', {})
             if ai_feedback.get('personalized_message'):
-                print(f"\nPERSONALIZED FEEDBACK")
+                print(f"\n🤖 PERSONALIZED FEEDBACK")
                 print(f"{ai_feedback['personalized_message']}")
                 print(f"(Generated by: {ai_feedback.get('generated_by', 'system')})")
             
         except Exception as e:
             logger.error(f"Error displaying summary: {e}")
-            print(f"\nError displaying summary report")
+            print(f"\n❌ Error displaying summary report")
     
     def save_json_results(self, test_results: List[Dict], json_report: Dict) -> str:
         """Save results with comprehensive error handling and backup"""
@@ -1353,7 +1354,7 @@ def validate_pdf_files(pdf_files: List[str]) -> List[str]:
 def main():
     """Main function with comprehensive error handling"""
     parser = argparse.ArgumentParser(
-        description="Optimized  Practice Test Interface with Negative Marking",
+        description="Optimized GATE Practice Test Interface with Negative Marking",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -1366,7 +1367,7 @@ Prerequisites:
   2. Create .env file with GEMINI_API_KEY for AI feedback (optional)
   3. Install required packages: pip install -r requirements.txt
 
-Note: This version includes  negative marking (-1/3 for incorrect answers)
+Note: This version includes GATE-style negative marking (-1/3 for incorrect answers)
 """
     )
     
@@ -1436,7 +1437,7 @@ Note: This version includes  negative marking (-1/3 for incorrect answers)
             if args.json_only:
                 print(json.dumps({"error": error_msg}, indent=2))
             else:
-                print(f"{error_msg}")
+                print(f"❌ {error_msg}")
             return 1
         
         # Initialize test interface
@@ -1444,13 +1445,13 @@ Note: This version includes  negative marking (-1/3 for incorrect answers)
         gemini_available = test_interface.setup_gemini()
         
         if not args.json_only:
-            print("Practice Test System with Negative Marking")
+            print("🚀 GATE Practice Test System with Negative Marking")
             print("="*60)
-            print(f"Generating questions from {len(valid_pdf_files)} PDF file(s)...")
+            print(f"📚 Generating questions from {len(valid_pdf_files)} PDF file(s)...")
             if gemini_available:
-                print("AI feedback enabled")
+                print("🤖 AI feedback enabled")
             else:
-                print("Using standard feedback (AI unavailable)")
+                print("🔧 Using standard feedback (AI unavailable)")
         
         # Generate questions
         try:
@@ -1466,7 +1467,7 @@ Note: This version includes  negative marking (-1/3 for incorrect answers)
             if args.json_only:
                 print(json.dumps({"error": error_msg}, indent=2))
             else:
-                print(f"{error_msg}")
+                print(f"❌ {error_msg}")
             return 1
         
         if not result.get("success", False):
@@ -1487,7 +1488,7 @@ Note: This version includes  negative marking (-1/3 for incorrect answers)
             return 1
         
         if not args.json_only:
-            print(f"Generated {len(questions)} questions")
+            print(f"✅ Generated {len(questions)} questions")
         
         # Conduct the test
         test_start = datetime.now()
@@ -1499,7 +1500,7 @@ Note: This version includes  negative marking (-1/3 for incorrect answers)
             if args.json_only:
                 print(json.dumps({"error": error_msg}, indent=2))
             else:
-                print(f"{error_msg}")
+                print(f"❌ {error_msg}")
             return 1
         
         test_duration = str(test_end - test_start).split('.')[0]
@@ -1518,7 +1519,7 @@ Note: This version includes  negative marking (-1/3 for incorrect answers)
             if args.json_only:
                 print(json.dumps({"error": error_msg}, indent=2))
             else:
-                print(f"{error_msg}")
+                print(f"❌ {error_msg}")
             return 1
         
         # Generate JSON report
@@ -1532,33 +1533,33 @@ Note: This version includes  negative marking (-1/3 for incorrect answers)
         else:  # both
             test_interface.display_summary_report(json_report)
             if not args.json_only:
-                print(f"\nComplete JSON Report:")
+                print(f"\n📄 Complete JSON Report:")
                 print("-"*50)
             print(json.dumps(json_report, indent=2, ensure_ascii=False))
         
         # Save results
         if not args.no_save:
             if not args.json_only:
-                print(f"\nSaving results...")
+                print(f"\n💾 Saving results...")
             
             results_file = test_interface.save_json_results(test_results, json_report)
             if results_file:
                 if not args.json_only:
-                    print(f"Results saved to: {results_file}")
+                    print(f"✅ Results saved to: {results_file}")
             else:
                 if not args.json_only:
-                    print(f" Failed to save results")
+                    print(f"⚠️ Failed to save results")
         
         # Final summary for console output
         if not args.json_only:
             overall_perf = json_report.get('overall_performance', {})
             grade_info = json_report.get('grade_assessment', {})
             
-            print(f"\n QUICK SUMMARY")
-            print(f" Grade: {grade_info.get('letter_grade', 'N/A')}")
-            print(f"Score: {overall_perf.get('score_percentage', 0):.1f}% (with negative marking)")
-            print(f"Accuracy: {overall_perf.get('accuracy_percentage', 0):.1f}%")
-            print(f"Avg Time: {overall_perf.get('average_time_per_question_seconds', 0):.1f}s")
+            print(f"\n📊 QUICK SUMMARY")
+            print(f"🎯 Grade: {grade_info.get('letter_grade', 'N/A')}")
+            print(f"📈 Score: {overall_perf.get('score_percentage', 0):.1f}% (with negative marking)")
+            print(f"📊 Accuracy: {overall_perf.get('accuracy_percentage', 0):.1f}%")
+            print(f"⏱️ Avg Time: {overall_perf.get('average_time_per_question_seconds', 0):.1f}s")
             
             next_level = json_report.get('recommendations', {}).get('next_difficulty_level', 'medium')
             print(f"🔄 Next Level: {next_level.upper()}")
@@ -1566,13 +1567,13 @@ Note: This version includes  negative marking (-1/3 for incorrect answers)
             weak_topics = json_report.get('problem_areas', {}).get('weakest_topics', [])
             if weak_topics:
                 topic_name = weak_topics[0].get('topic', 'key concepts').replace('_', ' ').title()
-                print(f"Focus on: {topic_name}")
+                print(f"📚 Focus on: {topic_name}")
         
         return 0
         
     except KeyboardInterrupt:
         if not args.json_only:
-            print(f"\Test interrupted by user")
+            print(f"\n⚠️ Test interrupted by user")
         else:
             print(json.dumps({"error": "Test interrupted by user"}, indent=2))
         return 1
@@ -1584,7 +1585,7 @@ Note: This version includes  negative marking (-1/3 for incorrect answers)
         if args.json_only:
             print(json.dumps({"error": error_msg}, indent=2))
         else:
-            print(f"{error_msg}")
+            print(f"❌ {error_msg}")
         return 1
 
 if __name__ == "__main__":

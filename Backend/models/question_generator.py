@@ -72,7 +72,7 @@ def configure_gemini_with_retry():
             'rate_limit_delay': 2.0
         },
         {
-            'name':'gemini-2.5-flash-lite',
+            'name':'gemini-2.5',
             'description':"Gemini 2.5 pro",
             'rate_limit_delay':1
         }
@@ -718,18 +718,18 @@ def generate_questions(pdf_paths: List[str], difficulty: str, total_questions: i
         print(f"Processing errors: {len(processing_errors)}")
     print("=" * 80)
     
-    # for i, q in enumerate(question_series, 1):
-    #     print(f"\n🔢 Question {i}:")
-    #     print(f"📝 {q['question']}")
-    #     print()
-    #     for option in q['options']:
-    #         print(f"   {option}")
-    #     print(f"\n   ✅ Correct Answer: {q['correct_answer']}")
-    #     if q.get('explanation'):
-    #         print(f"   💡 Explanation: {q['explanation']}")
-    #     if q.get('pdf_reference'):
-    #         print(f"   📖 PDF Reference: {q['pdf_reference']}")
-    #     print("─" * 60)
+    for i, q in enumerate(question_series, 1):
+        print(f"\n🔢 Question {i}:")
+        print(f"📝 {q['question']}")
+        print()
+        for option in q['options']:
+            print(f"   {option}")
+        print(f"\n   ✅ Correct Answer: {q['correct_answer']}")
+        if q.get('explanation'):
+            print(f"   💡 Explanation: {q['explanation']}")
+        if q.get('pdf_reference'):
+            print(f"   📖 PDF Reference: {q['pdf_reference']}")
+        print("─" * 60)
     
     # Save files if requested
     if save_files and question_series:

@@ -3,3 +3,5 @@ venv
 *.pdf
 __pycache__
 # generated_questions_medium.txt
+
+frontend

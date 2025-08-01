@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Test - Exam Practice Test Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+    :root {
+    --primary-color: #d6467d;
+    --primary-dark: #e23a3a;
+    --secondary-color: #c48f4f;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa; 
+    --darker-color: #343a40;
+    --white: #ffffff;
+    --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.15);
+    --shadow-heavy: 0 8px 32px rgba(0, 0, 0, 0.2);
+    --border-radius: 12px;
+    --transition: all 0.3s ease;
+    }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, --primary-color 25%, --primary-dark 75%);
+            min-height: 100vh;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-medium);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: var(--dark-color);
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+        }
+
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .test-section {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--darker-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--darker-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--white);
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+            background: #f7fafc;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .file-upload-area.dragover {
+            border-color: var(--success-color);
+            background: rgba(72, 187, 120, 0.05);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: var(--white);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #38a169 100%);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .test-container {
+            display: none;
+        }
+
+        .question-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-light);
+            border: 1px solid #e2e8f0;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f7fafc;
+        }
+
+        .question-number {
+            background: var(--primary-color);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 700;
+        }
+
+        .question-timer {
+            background: var(--info-color);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 600;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            color: var(--darker-color);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .options-container {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--white);
+        }
+
+        .option:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .option.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .option input[type="radio"] {
+            margin-right: 1rem;
+            transform: scale(1.2);
+        }
+
+        .question-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+            transition: width 0.3s ease;
+        }
+
+        .test-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+        }
+
+        .alert-danger {
+            background: rgba(245, 101, 101, 0.1);
+            color: var(--danger-color);
+            border: 1px solid rgba(245, 101, 101, 0.2);
+        }
+
+        .alert-success {
+            background: rgba(72, 187, 120, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(72, 187, 120, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .nav-menu {
+                gap: 1rem;
+            }
+            
+            .question-actions {
+                flex-direction: column;
+            }
+            
+            .test-info {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}" class="nav-brand">
+            🎓 Practice Generator
+        </a>
+        <ul class="nav-menu">
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('test_page') }}" class="active">Take Test</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- Welcome Section -->
+        <div class="test-section">
+            <h1 class="section-title">
+                <i class="fas fa-clipboard-check"></i>
+                Welcome, {{ user.fullname }}!
+            </h1>
+            <p style="font-size: 1.1rem; color: #6c757d; margin-bottom: 2rem;">
+                Upload your study materials and generate custom practice questions for your exam preparation.
+            </p>
+        </div>
+
+        <!-- PDF Upload Section -->
+        <div class="test-section" id="uploadSection">
+            <h2 class="section-title">
+                <i class="fas fa-upload"></i>
+                Upload Study Materials
+            </h2>
+            
+            <form id="questionForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-file-pdf"></i>
+                        Select PDF Files
+                    </label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                        <h3 style="margin-bottom: 0.5rem;">Drop your PDF files here</h3>
+                        <p style="color: #6c757d; margin-bottom: 1rem;">or click to browse files</p>
+                        <input type="file" id="pdfFiles" name="pdf_files" multiple accept=".pdf" style="display: none;">
+                        <div class="btn btn-outline" onclick="document.getElementById('pdfFiles').click()">
+                            <i class="fas fa-folder-open"></i>
+                            Choose Files
+                        </div>
+                    </div>
+                    <div id="selectedFiles" style="margin-top: 1rem;"></div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="difficulty">
+                            <i class="fas fa-layer-group"></i>
+                            Difficulty Level
+                        </label>
+                        <select id="difficulty" name="difficulty" class="form-select">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="questionCount">
+                            <i class="fas fa-list-ol"></i>
+                            Number of Questions
+                        </label>
+                        <select id="questionCount" name="questions" class="form-select">
+                            <option value="5">5 Questions</option>
+                            <option value="10" selected>10 Questions</option>
+                            <option value="15">15 Questions</option>
+                            <option value="20">20 Questions</option>
+                            <option value="25">25 Questions</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" id="generateBtn">
+                    <i class="fas fa-magic"></i>
+                    Generate Questions
+                </button>
+            </form>
+        </div>
+
+        <!-- Loading Section -->
+         <div class="loading-spinner" id="loadingSection">
+            <div class="spinner"></div>
+            <h3>Generating your personalized questions...</h3>
+            <p style="color: #6c757d;">This may take a few moments while we analyze your study materials.</p>
+        </div> 
+
+        <!-- Test Container -->
+        <div class="test-container" id="testContainer">
+            <!-- Test Header -->
+            <div class="test-section">
+                <div class="test-info">
+                    <div>
+                        <strong>Total Questions: <span id="totalQuestions">0</span></strong>
+                    </div>
+                    <div>
+                        <strong>Current Question: <span id="currentQuestionNum">1</span></strong>
+                    </div>
+                    <div>
+                        <strong>Time Elapsed: <span id="timeElapsed">00:00</span></strong>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Question Display -->
+            <div id="questionDisplay"></div>
+
+            <!-- Test Navigation -->
+            <div class="test-section">
+                <div class="question-actions">
+                    <button class="btn btn-outline" id="prevBtn" onclick="previousQuestion()" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                        Previous
+                    </button>
+                    <button class="btn" id="skipBtn" onclick="skipQuestion()">
+                        <i class="fas fa-forward"></i>
+                        Skip Question
+                    </button>
+                    <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>
+                        Next
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="btn btn-success" id="submitBtn" onclick="submitTest()" style="display: none;">
+                        <i class="fas fa-check"></i>
+                        Submit Test
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let questions = [];
+        let currentQuestion = 0;
+        let userAnswers = [];
+        let startTime = null;
+        let questionStartTime = null;
+
+        // File upload handling
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const pdfFilesInput = document.getElementById('pdfFiles');
+        const selectedFilesDiv = document.getElementById('selectedFiles');
+
+        // Drag and drop functionality
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        });
+
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('dragover');
+        });
+
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'application/pdf');
+            handleFiles(files);
+        });
+
+        fileUploadArea.addEventListener('click', () => {
+            pdfFilesInput.click();
+        });
+
+        pdfFilesInput.addEventListener('change', (e) => {
+            handleFiles(Array.from(e.target.files));
+        });
+
+        function handleFiles(files) {
+            if (files.length === 0) {
+                selectedFilesDiv.innerHTML = '<p style="color: var(--danger-color);"><i class="fas fa-exclamation-triangle"></i> Please select at least one PDF file.</p>';
+                return;
+            }
+
+            selectedFilesDiv.innerHTML = `
+                <h4 style="margin-bottom: 1rem; color: var(--success-color);">
+                    <i class="fas fa-check-circle"></i>
+                    Selected Files (${files.length})
+                </h4>
+                <div style="display: grid; gap: 0.5rem;">
+                    ${files.map(file => `
+                        <div style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem; background: rgba(72, 187, 120, 0.1); border-radius: 8px;">
+                            <i class="fas fa-file-pdf" style="color: var(--danger-color);"></i>
+                            <span style="flex: 1;">${file.name}</span>
+                            <span style="color: #6c757d; font-size: 0.9rem;">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Update the file input
+            const dt = new DataTransfer();
+            files.forEach(file => dt.items.add(file));
+            pdfFilesInput.files = dt.files;
+        }
+
+        // Form submission
+        document.getElementById('questionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const files = pdfFilesInput.files;
+            
+            if (files.length === 0) {
+                alert('Please select at least one PDF file.');
+                return;
+            }
+
+            // Add files to form data
+            for (let file of files) {
+                formData.append('pdf_files', file);
+            }
+            
+            formData.append('difficulty', document.getElementById('difficulty').value);
+            formData.append('questions', document.getElementById('questionCount').value);
+
+            // Show loading
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('loadingSection').style.display = 'block';
+
+            try {
+                const response = await fetch('/api/generate_questions', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    questions = result.questions;
+                    startTest();
+                } else {
+                    throw new Error(result.error || 'Failed to generate questions');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loadingSection').style.display = 'none';
+                document.getElementById('uploadSection').style.display = 'block';
+                alert('Error generating questions: ' + error.message);
+            }
+        });
+
+        function startTest() {
+            document.getElementById('loadingSection').style.display = 'none';
+            document.getElementById('testContainer').style.display = 'block';
+            
+            startTime = new Date();
+            currentQuestion = 0;
+            userAnswers = new Array(questions.length).fill(null);
+            
+            document.getElementById('totalQuestions').textContent = questions.length;
+            displayQuestion();
+            startTimer();
+        }
+
+        function displayQuestion() {
+            if (currentQuestion >= questions.length) return;
+
+            const question = questions[currentQuestion];
+            questionStartTime = new Date();
+            
+            document.getElementById('currentQuestionNum').textContent = currentQuestion + 1;
+            document.getElementById('progressFill').style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+
+            const questionHTML = `
+                <div class="question-card">
+                    <div class="question-header">
+                        <div class="question-number">Question ${currentQuestion + 1}</div>
+                        <div class="question-timer" id="questionTimer">00:00</div>
+                    </div>
+                    
+                    <div class="question-text">${question.question}</div>
+                    
+                    <div class="options-container">
+                        ${question.options.map((option, index) => `
+                            <label class="option" data-option="${String.fromCharCode(65 + index)}">
+                                <input type="radio" name="answer" value="${String.fromCharCode(65 + index)}" 
+                                       ${userAnswers[currentQuestion] === String.fromCharCode(65 + index) ? 'checked' : ''}>
+                                <span><strong>${String.fromCharCode(65 + index)}.</strong> ${option}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('questionDisplay').innerHTML = questionHTML;
+
+            // Add event listeners to options
+            document.querySelectorAll('input[name="answer"]').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    userAnswers[currentQuestion] = e.target.value;
+                    updateNavigationButtons();
+                    
+                    // Update visual selection
+                    document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+                    e.target.closest('.option').classList.add('selected');
+                });
+            });
+
+            updateNavigationButtons();
+        }
+
+        function updateNavigationButtons() {
+            document.getElementById('prevBtn').disabled = currentQuestion === 0;
+            document.getElementById('nextBtn').disabled = userAnswers[currentQuestion] === null;
+            
+            if (currentQuestion === questions.length - 1) {
+                document.getElementById('nextBtn').style.display = 'none';
+                document.getElementById('submitBtn').style.display = 'inline-flex';
+            } else {
+                document.getElementById('nextBtn').style.display = 'inline-flex';
+                document.getElementById('submitBtn').style.display = 'none';
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                displayQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1 && userAnswers[currentQuestion] !== null) {
+                currentQuestion++;
+                displayQuestion();
+            }
+        }
+
+        function skipQuestion() {
+            userAnswers[currentQuestion] = 'SKIP';
+            if (currentQuestion < questions.length - 1) {
+                nextQuestion();
+            } else {
+                updateNavigationButtons();
+            }
+        }
+
+        function startTimer() {
+            setInterval(() => {
+                const now = new Date();
+                const elapsed = Math.floor((now - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('timeElapsed').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    
+                if (questionStartTime) {
+                    const questionElapsed = Math.floor((now - questionStartTime) / 1000);
+                    const qMinutes = Math.floor(questionElapsed / 60);
+                    const qSeconds = questionElapsed % 60;
+                    const timerElement = document.getElementById('questionTimer');
+                    if (timerElement) {
+                        timerElement.textContent = 
+                            `${qMinutes.toString().padStart(2, '0')}:${qSeconds.toString().padStart(2, '0')}`;
+                    }
+                }
+            }, 1000);
+        }
+
+        async function submitTest() {
+            if (confirm('Are you sure you want to submit your test? You cannot change your answers after submission.')) {
+                const endTime = new Date();
+                const totalTime = Math.floor((endTime - startTime) / 1000);
+                
+                const results = questions.map((question, index) => ({
+                    question_number: index + 1,
+                    question: question.question,
+                    user_answer: userAnswers[index] || 'SKIP',
+                    correct_answer: question.correct_answer,
+                    is_correct: userAnswers[index] === question.correct_answer,
+                    time_taken: Math.floor(totalTime / questions.length), // Average time per question
+                    difficulty: question.difficulty,
+                    topic: question.topic || 'General',
+                    skipped: userAnswers[index] === 'SKIP'
+                }));
+
+                try {
+                    const response = await fetch('/api/submit_results', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ results })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showResults(result);
+                    } else {
+                        throw new Error(result.error || 'Failed to submit test');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error submitting test: ' + error.message);
+                }
+            }
+        }
+
+        function showResults(result) {
+            const resultsHTML = `
+                <div class="test-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        Test Results
+                    </h2>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(72, 187, 120, 0.1); border-radius: 12px;">
+                            <h3 style="color: var(--success-color); font-size: 2rem; margin-bottom: 0.5rem;">${result.score}%</h3>
+                            <p style="color: #6c757d;">Your Score</p>
+                        </div>
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(102, 126, 234, 0.1); border-radius: 12px;">
+                            <h3 style="color: var(--primary-color); font-size: 2rem; margin-bottom: 0.5rem;">${result.correct_answers}</h3>
+                            <p style="color: #6c757d;">Correct Answers</p>
+                        </div>
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(245, 101, 101, 0.1); border-radius: 12px;">
+                            <h3 style="color: var(--danger-color); font-size: 2rem; margin-bottom: 0.5rem;">${result.incorrect_answers}</h3>
+                            <p style="color: #6c757d;">Incorrect Answers</p>
+                        </div>
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(237, 137, 54, 0.1); border-radius: 12px;">
+                            <h3 style="color: var(--warning-color); font-size: 2rem; margin-bottom: 0.5rem;">${Math.floor(result.total_time / 60)}:${(result.total_time % 60).toString().padStart(2, '0')}</h3>
+                            <p style="color: #6c757d;">Total Time</p>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <i class="fas fa-trophy"></i>
+                        <strong>Congratulations!</strong> ${result.summary}
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <a href="{{ url_for('dashboard') }}" class="btn">
+                            <i class="fas fa-home"></i>
+                            Back to Dashboard
+                        </a>
+                        <button onclick="retakeTest()" class="btn btn-outline">
+                            <i class="fas fa-redo"></i>
+                            Take Another Test
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('testContainer').innerHTML = resultsHTML;
+        }
+
+        function retakeTest() {
+            // Reset everything
+            questions = [];
+            currentQuestion = 0;
+            userAnswers = [];
+            startTime = null;
+            questionStartTime = null;
+            
+            // Show upload section again
+            document.getElementById('testContainer').style.display = 'none';
+            document.getElementById('uploadSection').style.display = 'block';
+            
+            // Reset form
+            document.getElementById('questionForm').reset();
+            selectedFilesDiv.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

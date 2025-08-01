@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Exam Practice Test Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}" id="flash-{{ loop.index }}">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% elif category == 'info' %}info-circle{% else %}exclamation-triangle{% endif %}"></i>
+                        <span>{{ message }}</span>
+                        <button class="close-flash" onclick="closeFlash('flash-{{ loop.index }}')">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>🎓 Welcome Back</h1>
+                <p>Sign in to continue your Exam preparation journey</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username or Email</label>
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            class="form-input" 
+                            placeholder="Enter your username or email"
+                            required
+                            autocomplete="username"
+                        >
+                        <i class="fas fa-user input-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="form-input" 
+                            placeholder="Enter your password"
+                            required
+                            autocomplete="current-password"
+                        >
+                        <i class="fas fa-lock input-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="remember_me" style="accent-color: var(--primary-color);">
+                            <span style="font-size: 0.9rem; color: #6c757d;">Remember me</span>
+                        </label>
+                        <a href="#" style="font-size: 0.9rem; color: var(--primary-color); text-decoration: none;">
+                            Forgot password?
+                        </a>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span id="loginBtnText">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </span>
+                </button>
+            </form>
+
+            <div class="auth-link">
+                <p style="color: #6c757d; margin-bottom: 15px;">Don't have an account?</p>
+                <a href="{{ url_for('register') }}" class="btn btn-outline" style="text-decoration: none; display: inline-block; width: 100%;">
+                    <i class="fas fa-user-plus"></i>
+                    Create New Account
+                </a>
+            </div>
+
+            <!-- Demo Credentials (Remove in production) -->
+            <div style="margin-top: 30px; padding: 20px; background: rgba(102, 126, 234, 0.1); border-radius: 12px; text-align: center;">
+                <p style="font-size: 0.85rem; color: #6c757d; margin-bottom: 10px;">
+                    <i class="fas fa-info-circle"></i>
+                    Demo Credentials (for testing)
+                </p>
+                <p style="font-size: 0.8rem; color: #6c757d;">
+                    Username: <strong>demo</strong> | Password: <strong>demo123</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced login form handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+
+            // Form submission with loading state
+            loginForm.addEventListener('submit', function(e) {
+                loginBtn.disabled = true;
+                loginBtnText.innerHTML = '<div class="loading-spinner"></div> Signing In...';
+            });
+
+            // Auto-hide flash messages
+            setTimeout(() => {
+                const flashMessages = document.querySelectorAll('.flash-message');
+                flashMessages.forEach(message => {
+                    message.style.animation = 'slideOutRight 0.4s ease';
+                    setTimeout(() => message.remove(), 400);
+                });
+            }, 5000);
+
+            // Input focus effects
+            const inputs = document.querySelectorAll('.form-input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('focused');
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('focused');
+                });
+            });
+
+            // Demo credentials click-to-fill
+            document.querySelector('[style*="Demo Credentials"]').addEventListener('click', function() {
+                document.getElementById('username').value = 'demo';
+                document.getElementById('password').value = 'demo123';
+            });
+        });
+
+        // Close flash message function
+        function closeFlash(messageId) {
+            const message = document.getElementById(messageId);
+            if (message) {
+                message.style.animation = 'slideOutRight 0.4s ease';
+                setTimeout(() => message.remove(), 400);
+            }
+        }
+
+        // Add slideOutRight animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideOutRight {
+                to {
+                    opacity: 0;
+                    transform: translateX(100%);
+                }
+            }
+            
+            .input-group.focused .input-icon {
+                color: var(--primary-color) !important;
+                transform: translateY(-50%) scale(1.1);
+            }
+            
+            .input-group.focused .form-input {
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Exam Practice Test Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}" class="nav-brand">
+            🎓 Exam Practice Generator
+        </a>
+        <ul class="nav-menu">
+            <li><a href="{{ url_for('dashboard') }}" class="active">Dashboard</a></li>
+            <li><a href="{{ url_for('test_page') }}">Take Test</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="welcome-text">
+                <h1>Welcome, {{ session.full_name }}! 👋</h1>
+                <p>Ready to ace your Exam preparation? Let's get started!</p>
+            </div>
+            <div class="header-actions">
+                <div class="user-avatar">
+                    {{ session.full_name[0].upper() }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stat-value">{{ stats.total_tests or 0 }}</div>
+                <div class="stat-label">Total Tests Taken</div>
+                <div class="stat-trend trend-neutral">
+                    <i class="fas fa-chart-line"></i>
+                    Track your progress
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stat-value">{{ "%.1f"|format(stats.avg_score or 0) }}%</div>
+                <div class="stat-label">Average Score</div>
+                <div class="stat-trend {% if stats.avg_score and stats.avg_score >= 70 %}trend-up{% elif stats.avg_score and stats.avg_score >= 50 %}trend-neutral{% else %}trend-down{% endif %}">
+                    <i class="fas fa-{% if stats.avg_score and stats.avg_score >= 70 %}arrow-up{% elif stats.avg_score and stats.avg_score >= 50 %}minus{% else %}arrow-down{% endif %}"></i>
+                    {% if stats.avg_score and stats.avg_score >= 70 %}Excellent!{% elif stats.avg_score and stats.avg_score >= 50 %}Good progress{% else %}Keep practicing!{% endif %}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="stat-value">{{ "%.1f"|format(stats.best_score or 0) }}%</div>
+                <div class="stat-label">Best Score</div>
+                <div class="stat-trend {% if stats.best_score and stats.best_score >= 80 %}trend-up{% else %}trend-neutral{% endif %}">
+                    <i class="fas fa-star"></i>
+                    Personal best
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value">
+                    {% if stats.total_time %}
+                        {% set hours = (stats.total_time // 3600) %}
+                        {% set minutes = ((stats.total_time % 3600) // 60) %}
+                        {% if hours > 0 %}{{ hours }}h {% endif %}{{ minutes }}m
+                    {% else %}
+                        0m
+                    {% endif %}
+                </div>
+                <div class="stat-label">Study Time</div>
+                <div class="stat-trend trend-neutral">
+                    <i class="fas fa-hourglass-half"></i>
+                    Time invested
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="history-section">
+            <h2 class="section-title">
+                <i class="fas fa-rocket"></i>
+                Quick Actions
+            </h2>
+            <div class="action-buttons">
+                <a href="{{ url_for('test_page') }}" class="btn btn-primary btn-large">
+                    <i class="fas fa-play"></i>
+                    Start New Test
+                </a>
+                <a href="{{ url_for('profile') }}" class="btn btn-outline btn-large">
+                    <i class="fas fa-user-cog"></i>
+                    Manage Profile
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Test History -->
+        <div class="history-section">
+            <h2 class="section-title">
+                <i class="fas fa-history"></i>
+                Recent Test History
+            </h2>
+            
+            {% if test_history %}
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Score</th>
+                                <th>Questions</th>
+                                <th>Difficulty</th>
+                                <th>Time Taken</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for test in test_history %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ test.test_name or 'Practice Test' }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="score-badge {% if test.score_percentage >= 80 %}score-excellent{% elif test.score_percentage >= 60 %}score-good{% elif test.score_percentage >= 40 %}score-average{% else %}score-poor{% endif %}">
+                                            {{ "%.1f"|format(test.score_percentage) }}%
+                                        </span>
+                                    </td>
+                                    <td>{{ test.correct_answers }}/{{ test.total_questions }}</td>
+                                    <td>
+                                        <span class="difficulty-badge difficulty-{{ test.difficulty }}">
+                                            {{ test.difficulty.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if test.time_taken %}
+                                            {% set minutes = (test.time_taken // 60) %}
+                                            {% set seconds = (test.time_taken % 60) %}
+                                            {{ minutes }}m {{ seconds }}s
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ test.created_at.split(' ')[0] if test.created_at else 'N/A' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 60px 20px; color: #6c757d;">
+                    <i class="fas fa-clipboard-list" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;"></i>
+                    <h3 style="margin-bottom: 15px; color: #495057;">No Tests Taken Yet</h3>
+                    <p style="margin-bottom: 30px; font-size: 1.1rem;">Start your Exam preparation journey by taking your first practice test!</p>
+                    <a href="{{ url_for('test_page') }}" class="btn btn-primary">
+                        <i class="fas fa-play"></i>
+                        Take Your First Test
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Study Tips -->
+        <div class="history-section">
+            <h2 class="section-title">
+                <i class="fas fa-lightbulb"></i>
+                Study Tips & Insights
+            </h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div style="text-align: center;">
+                        <i class="fas fa-target" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 15px;"></i>
+                        <h4 style="color: var(--darker-color); margin-bottom: 10px;">Consistency is Key</h4>
+                        <p style="color: #6c757d; font-size: 0.95rem; line-height: 1.6;">
+                            Take practice tests regularly to build your confidence and identify weak areas.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div style="text-align: center;">
+                        <i class="fas fa-chart-line" style="font-size: 2.5rem; color: var(--success-color); margin-bottom: 15px;"></i>
+                        <h4 style="color: var(--darker-color); margin-bottom: 10px;">Track Progress</h4>
+                        <p style="color: #6c757d; font-size: 0.95rem; line-height: 1.6;">
+                            Monitor your performance trends and focus on improving your weak subjects.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div style="text-align: center;">
+                        <i class="fas fa-clock" style="font-size: 2.5rem; color: var(--warning-color); margin-bottom: 15px;"></i>
+                        <h4 style="color: var(--darker-color); margin-bottom: 10px;">Time Management</h4>
+                        <p style="color: #6c757d; font-size: 0.95rem; line-height: 1.6;">
+                            Practice with time constraints to improve your speed and accuracy.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 40px 20px; color: #6c757d; background: rgba(255,255,255,0.1); margin-top: 50px;">
+        <p style="font-size: 1.1rem; margin-bottom: 10px;">
+            <i class="fas fa-graduation-cap"></i>
+            <strong>Keep Learning, Keep Growing!</strong>
+        </p>
+        <p style="font-size: 0.9rem;">
+            Your success in Exam depends on consistent practice and smart preparation.
+        </p>
+    </footer>
+
+    <script>
+        // Add some interactive features
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate stat cards on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animation = 'slideUp 0.6s ease forwards';
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all stat cards
+            document.querySelectorAll('.stat-card').forEach(card => {
+                observer.observe(card);
+            });
+
+            // Add hover effects to action buttons
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px) scale(1.02)';
+                });
+                
+                btn.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+
+            // Welcome message based on time of day
+            const hour = new Date().getHours();
+            const welcomeText = document.querySelector('.welcome-text h1');
+            
+            if (hour < 12) {
+                welcomeText.innerHTML = welcomeText.innerHTML.replace('Welcome', 'Good Morning');
+            } else if (hour < 17) {
+                welcomeText.innerHTML = welcomeText.innerHTML.replace('Welcome', 'Good Afternoon');
+            } else {
+                welcomeText.innerHTML = welcomeText.innerHTML.replace('Welcome', 'Good Evening');
+            }
+        });
+    </script>
+</body>
+</html>
